@@ -20,32 +20,32 @@ class PlainMenu extends LayersMenuCommon
 /**
 * The template to be used for the Plain Menu
 */
-var $plainMenuTpl;
+public $plainMenuTpl;
 /**
 * An array where we store the Plain Menu code for each menu
 * @access private
 * @var array
 */
-var $_plainMenu;
+public $_plainMenu;
 
 /**
 * The template to be used for the Horizontal Plain Menu
 */
-var $horizontalPlainMenuTpl;
+public $horizontalPlainMenuTpl;
 /**
 * An array where we store the Horizontal Plain Menu code for each menu
 * @access private
 * @var array
 */
-var $_horizontalPlainMenu;
+public $_horizontalPlainMenu;
 
 /**
 * The constructor method; it initializates some variables
 * @return void
 */
-function PlainMenu()
+public function __construct()
 {
-	$this->LayersMenuCommon();
+	parent::__construct();
 
 	$this->plainMenuTpl = $this->tpldir . 'layersmenu-plain_menu.ihtml';
 	$this->_plainMenu = array();

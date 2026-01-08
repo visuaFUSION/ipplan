@@ -48,7 +48,7 @@ function setdefault($o,$a) {
 
 function defsetting($a) {
     if( is_array($a) ) {
-        while( list($key,$val) = each($a) ) {
+        foreach($a as $key => $val) {
           $name = "def_" . $key ;
           $GLOBALS["$name"] = $val;
         }
@@ -283,10 +283,10 @@ function getclass($c) {
 }
 
 class HTMLBase {
-        var $classname = "htmlbase" ;
-        var $settings = "";
-        var $children = FALSE;
-        var $level = 0;
+        public $classname = "htmlbase" ;
+        public $settings = "";
+        public $children = FALSE;
+        public $level = 0;
 
         function insert($c) {
            $this->children[] = $c ;
@@ -295,7 +295,7 @@ class HTMLBase {
 
         function listchild() {
            reset($this->children);
-           while( list($key,$ch) = each($this->children) ) {
+           foreach($this->children as $key => $ch) {
                 $val = $this->children[$key];
            }
         }
@@ -305,13 +305,13 @@ class HTMLBase {
                 reset($this->children);
                 $ac = $this->children ; unset($this->children);
 
-                while ( list($key,$ch) = each($ac) ) {
+                foreach($ac as $key => $ch) {
                        if ( getclass($ch) == "wheader" ) { continue ;}
                        $this->children[] = $ch;
                 }
                 if(is_array($this->children)) {
                     reset($this->children);
-                    while( list($key,$ch) = each($this->children) ) {
+                    foreach($this->children as $key => $ch) {
                         $val = $this->children[$key];
                         $GLOBALS["$val"]->printit();
                     }
@@ -334,18 +334,18 @@ class HTMLBase {
           global $$def;
           if ( is_array(${$def}) ) {
             reset(${$def});
-            while( list($key,$val) = each(${$def}) ) {
+            foreach(${$def} as $key => $val) {
                 $temp["$key"] = $val;
             }
           }
           if ( is_array($a) ) {
             reset($a);
-            while( list($key,$val) = each($a) ) {
+            foreach($a as $key => $val) {
                 $temp["$key"] = $val;
             }
           }
           reset($temp);
-          while (list($key,$val) = each($temp) ) {
+          foreach($temp as $key => $val) {
                 $key = strtoupper($key);
                 if ( $key == "COLS" && $this->classname == "table" )    { 
                     $this->cols = $val;
@@ -373,9 +373,9 @@ class HTMLBase {
 }
 
 class Window extends HTMLBase {
-        var $classname = "window";
+        public $classname = "window";
 
-        function Window($a = "") {
+        public function __construct($a = "") {
           $this->setparam($a);
         }
 
@@ -393,7 +393,7 @@ class Window extends HTMLBase {
         function printheader() {
             if (is_array($this->children)) {
                 reset($this->children);
-                while ( list(,$ch) = each($this->children) ) {
+                foreach($this->children as $ch) {
                     if ( getclass($ch) == "wheader" ) {
                          $GLOBALS["$ch"]->printit();
                     }
@@ -403,15 +403,15 @@ class Window extends HTMLBase {
 }
 
 class WHeader extends HTMLBase {
-        var $classname = "wheader";
-        var $title;
+        public $classname = "wheader";
+        public $title;
         // plx: adding var meta
-        var $meta; 
+        public $meta; 
 
-        function WHeader($t = "", $m = "") {
+        public function __construct($t = "", $m = "") {
           $this->title = $t;
           // plx: setting arg to var
-          $this->meta = $m; 
+          $this->meta = $m;
         }
 
         function printit() {
@@ -420,7 +420,7 @@ class WHeader extends HTMLBase {
           }
           // plx: including the content var to head as meta
           if (is_array($this->meta) && count(array_keys($this->meta)) > 0) {
-             while (list($name, $content) = each($this->meta)) {
+             foreach($this->meta as $name => $content) {
                  echo "        <META NAME=\"".$name."\" CONTENT=\"".$content."\" />";
              }
           }
@@ -429,13 +429,13 @@ class WHeader extends HTMLBase {
 }
 
 class Table extends HTMLBase {
-        var $classname = "table";
-        var $cols = 1 ;
-        var $currow = 0;
-        var $count  = array();
-        var $printrow = array();
+        public $classname = "table";
+        public $cols = 1 ;
+        public $currow = 0;
+        public $count  = array();
+        public $printrow = array();
 
-        function Table($a = "") {
+        public function __construct($a = "") {
           $this->setparam($a);
         }
 
@@ -448,7 +448,7 @@ class Table extends HTMLBase {
         function printtable() {
            if (is_array($this->children)) {
                 reset($this->children);
-                while( list($key,$ch) = each($this->children) ) {
+                foreach($this->children as $key => $ch) {
                         if ( getclass($ch) != "cell" ) {
                             $GLOBALS["$ch"]->printit();
                             continue;
@@ -478,10 +478,10 @@ class Table extends HTMLBase {
 }
 
 class Cell extends HTMLBase {
-        var $classname = "cell";
-        var $cs = 1 ; var $rs = 1 ;
+        public $classname = "cell";
+        public $cs = 1 ; public $rs = 1 ;
 
-        function Cell($a = "") {
+        public function __construct($a = "") {
           $this->setparam($a);
         }
 
@@ -492,11 +492,11 @@ class Cell extends HTMLBase {
 }
 
 class Image extends HTMLBase {
-        var $classname = "image";
-        var $source;
-        var $noindent;
+        public $classname = "image";
+        public $source;
+        public $noindent;
 
-        function Image($src,$a,$ni  = "") {
+        public function __construct($src,$a,$ni  = "") {
                 $this->setparam($a);
                 $this->source = $src ;
                 if(!empty($ni)) { $this->noindent = TRUE; }
@@ -514,10 +514,10 @@ class Image extends HTMLBase {
 }
 
 class Anchor extends HTMLBase {
-    var $classname = "anchor";
-    var $source; var $href ;
+    public $classname = "anchor";
+    public $source; public $href ;
 
-    function Anchor($h,$s,$a = "") {
+    public function __construct($h,$s,$a = "") {
         $this->setparam($a);
         if ( !empty($h) ) { $this->href = $h; }
         if ( getclass($s) ) {
@@ -541,10 +541,10 @@ class Anchor extends HTMLBase {
 }
 
 class Block extends HTMLBase {
-    var $classname = "block";
-    var $source;
+    public $classname = "block";
+    public $source;
 
-    function Block($b) {
+    public function __construct($b) {
        $this->source = $b;
     }
 
@@ -554,11 +554,11 @@ class Block extends HTMLBase {
 }
 
 class Text extends HTMLBase {
-    var $classname = "text";
-    var $str;
-    var $fmt = "";
+    public $classname = "text";
+    public $str;
+    public $fmt = "";
 
-    function Text($s,$a = "") {
+    public function __construct($s,$a = "") {
         $this->setparam($a);
         $this->str = (strlen($s)==0 and empty($s)) ? "" : htmlspecialchars($s);
     }
@@ -573,11 +573,11 @@ class Text extends HTMLBase {
 }
 
 class TextBR extends HTMLBase {
-    var $classname = "text";
-    var $str;
-    var $fmt = "";
+    public $classname = "text";
+    public $str;
+    public $fmt = "";
 
-    function TextBR($s = "",$a = "") {
+    public function __construct($s = "",$a = "") {
         $this->setparam($a);
         $this->str = (strlen($s)==0 and empty($s)) ? "" : htmlspecialchars($s);
     }
@@ -592,11 +592,11 @@ class TextBR extends HTMLBase {
 }
 
 class TextBRBR extends HTMLBase {
-    var $classname = "text";
-    var $str;
-    var $fmt = "";
+    public $classname = "text";
+    public $str;
+    public $fmt = "";
 
-    function TextBRBR($s,$a = "") {
+    public function __construct($s,$a = "") {
         $this->setparam($a);
         $this->str = (strlen($s)==0 and empty($s)) ? "" : htmlspecialchars($s);
     }
@@ -611,10 +611,10 @@ class TextBRBR extends HTMLBase {
 }
 
 class Span extends HTMLBase {
-    var $classname = "span";
-    var $str;
+    public $classname = "span";
+    public $str;
 
-    function Span($s,$a = "") {
+    public function __construct($s,$a = "") {
         $this->setparam($a);
         $this->str = $s;
     }
@@ -629,9 +629,9 @@ class Span extends HTMLBase {
 }
 
 class Form extends HTMLBase {
-    var $classname = "form";
+    public $classname = "form";
 
-    function Form($a = "") {
+    public function __construct($a = "") {
        $this->setparam($a);
     }
 
@@ -643,10 +643,10 @@ class Form extends HTMLBase {
 }
 
 class Script extends HTMLBase {
-    var $classname = "script";
-    var $content;
+    public $classname = "script";
+    public $content;
 
-    function Script($c,$a = "") {
+    public function __construct($c,$a = "") {
        $this->setparam($a);
        $this->content = $c;
     }
@@ -664,10 +664,10 @@ class Script extends HTMLBase {
 
 // plx: adding NoScript
 class NoScript extends HTMLBase {
-    var $classname = "noscript";
-    var $content;
+    public $classname = "noscript";
+    public $content;
 
-    function Script($c,$a = "") {
+    public function __construct($c,$a = "") {
        $this->setparam($a);
        $this->content = $c;
     }
@@ -680,10 +680,10 @@ class NoScript extends HTMLBase {
 }
 
 class Heading extends HTMLBase {
-    var $classname = "heading";
-    var $content; var $lev ;
+    public $classname = "heading";
+    public $content; public $lev ;
 
-    function Heading($l,$c,$a = "") {
+    public function __construct($l,$c,$a = "") {
        $this->setparam($a);
        $this->content = $c;
        $this->lev = $l;
@@ -696,11 +696,11 @@ class Heading extends HTMLBase {
 }
 
 class Generic extends HTMLBase {
-    var $classname = "generic";
-    var $tag;
+    public $classname = "generic";
+    public $tag;
 
-    function Generic($t,$a = "") {
-       $t = strtoupper($t);        
+    public function __construct($t,$a = "") {
+       $t = strtoupper($t);
        $this->setparam($a);
        $this->tag = $t;
     }
@@ -711,10 +711,10 @@ class Generic extends HTMLBase {
 }
 
 class Container extends HTMLBase {
-    var $classname = "container";
-    var $tag;
+    public $classname = "container";
+    public $tag;
 
-    function Container($t,$a = "") {
+    public function __construct($t,$a = "") {
        $t = strtoupper($t);
        $this->setparam($a);
        $this->tag = strtoupper($t);
@@ -730,10 +730,10 @@ class Container extends HTMLBase {
 }
 
 class Comment extends HTMLBase {
-    var $classname = "comment";
-    var $comment;
+    public $classname = "comment";
+    public $comment;
 
-    function Comment($m = "") {
+    public function __construct($m = "") {
        $this->comment = $m;
     }
 
@@ -743,10 +743,10 @@ class Comment extends HTMLBase {
 }
 
 class Alist extends HTMLBase {
-    var $classname = "alist";
-    var $tag; var $content;
+    public $classname = "alist";
+    public $tag; public $content;
 
-    function Alist($t,$c,$a = "") {
+    public function __construct($t,$c,$a = "") {
        $t = strtoupper($t);
        $this->setparam($a);
        $this->tag = $t;
@@ -756,7 +756,7 @@ class Alist extends HTMLBase {
     function printit() {
         $this->indent(); echo "<" . $this->tag . $this->settings . ">";
         if (is_array($this->content)) {
-            while (list(,$ll) = each($this->content) ) {
+            foreach($this->content as $ll) {
                 if ( getclass($ll) ) {
 		    $this->children = array();
                     $this->insert($ll);
@@ -773,9 +773,9 @@ class Alist extends HTMLBase {
 }
 
 class Button extends HTMLBase {
-    var $classname = "button";
+    public $classname = "button";
 
-    function Button($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -786,11 +786,11 @@ class Button extends HTMLBase {
 }
 
 class Checkbox extends HTMLBase {
-    var $classname = "checkbox";
-    var $textfield = "";
-    var $checked = "" ;
+    public $classname = "checkbox";
+    public $textfield = "";
+    public $checked = "" ;
 
-    function Checkbox($a,$t,$c = "") {
+    public function __construct($a,$t,$c = "") {
        $this->setparam($a);
        if (!empty($c)) { $this->checked = " CHECKED"; }
        $this->textfield = $t ;
@@ -803,9 +803,9 @@ class Checkbox extends HTMLBase {
 }
 
 class Inputfile extends HTMLBase {
-    var $classname = "inputfile";
+    public $classname = "inputfile";
 
-    function Inputfile($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -816,9 +816,9 @@ class Inputfile extends HTMLBase {
 }
 
 class Hidden extends HTMLBase {
-    var $classname = "hidden";
+    public $classname = "hidden";
 
-    function Hidden($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -829,10 +829,10 @@ class Hidden extends HTMLBase {
 }
 
 class Imagebutton extends HTMLBase {
-    var $classname = "imagebutton";
-    var $source ;
+    public $classname = "imagebutton";
+    public $source ;
 
-    function Imagebutton($s,$a) {
+    public function __construct($s,$a) {
        $this->setparam($a);
        $this->source = $s;
     }
@@ -844,9 +844,9 @@ class Imagebutton extends HTMLBase {
 }
 
 class Password extends HTMLBase {
-    var $classname = "password";
+    public $classname = "password";
 
-    function Password($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -857,11 +857,11 @@ class Password extends HTMLBase {
 }
 
 class Radio extends HTMLBase {
-    var $classname = "radio";
-    var $textfield = "";
-    var $checked = "" ;
+    public $classname = "radio";
+    public $textfield = "";
+    public $checked = "" ;
 
-    function Radio($a,$t,$c = "") {
+    public function __construct($a,$t,$c = "") {
        $this->setparam($a);
        if (!empty($c)) { $this->checked = " CHECKED"; }
        if ( getclass($t) ) {
@@ -885,9 +885,9 @@ class Radio extends HTMLBase {
 }
 
 class Freset extends HTMLBase {
-    var $classname = "freset";
+    public $classname = "freset";
 
-    function Freset($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -898,9 +898,9 @@ class Freset extends HTMLBase {
 }
 
 class Submit extends HTMLBase {
-    var $classname = "submit";
+    public $classname = "submit";
 
-    function Submit($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -911,9 +911,9 @@ class Submit extends HTMLBase {
 }
 
 class Input_text extends HTMLBase {
-    var $classname = "input_text";
+    public $classname = "input_text";
 
-    function Input_text($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -924,10 +924,10 @@ class Input_text extends HTMLBase {
 }
 
 class Selectbox extends HTMLBase {
-    var $classname = "selectbox";
-    var $options ; var $selected;
+    public $classname = "selectbox";
+    public $options ; public $selected;
 
-    function Selectbox($o,$a, $s = "" ) {
+    public function __construct($o,$a, $s = "" ) {
        $this->setparam($a);
        $this->options = $o;
        $this->selected= $s;
@@ -936,13 +936,15 @@ class Selectbox extends HTMLBase {
 
     function printit() {
       $this->indent(); echo "<SELECT". $this->settings . ">";
-      while( list($val,$na) = each($this->options) ) {
+      foreach($this->options as $val => $na) {
          if (!is_array($na)) {
              $this->indent(); echo "    <OPTION VALUE=\"$val\"";
              if ( $this->selected == $val ) { echo " SELECTED"; }
              echo ">".htmlspecialchars($na);
          } else {
-             list($txt,$clr) = each($na);
+             foreach($na as $txt => $clr) {
+                 break;
+             }
              $this->indent();
              echo "    <OPTION VALUE=\"$val\"";
              if ( $this->selected == $val ) { echo " SELECTED"; }
@@ -955,10 +957,10 @@ class Selectbox extends HTMLBase {
 }
 
 class Textarea extends HTMLBase {
-    var $classname = "textarea";
-    var $messages ;
+    public $classname = "textarea";
+    public $messages ;
 
-    function Textarea($a,$m = "") {
+    public function __construct($a,$m = "") {
        $this->setparam($a);
        $this->messages = htmlspecialchars($m);
     }
@@ -970,9 +972,9 @@ class Textarea extends HTMLBase {
 }
 
 class Imagemap extends HTMLBase {
-    var $classname = "imagemap";
+    public $classname = "imagemap";
 
-    function Imagemap($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -984,9 +986,9 @@ class Imagemap extends HTMLBase {
 }
 
 class Area extends HTMLBase {
-    var $classname = "area";
+    public $classname = "area";
 
-    function Area($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -996,9 +998,9 @@ class Area extends HTMLBase {
 }
 
 class Layer extends HTMLBase {
-    var $classname = "layer";
+    public $classname = "layer";
 
-    function Layer($a) {
+    public function __construct($a) {
        $this->setparam($a);
     }
 
@@ -1010,10 +1012,10 @@ class Layer extends HTMLBase {
 }
 
 class Nolayer extends HTMLBase {
-    var $classname = "nolayer";
-    var $messages;
+    public $classname = "nolayer";
+    public $messages;
 
-    function Nolayer($m) {
+    public function __construct($m) {
         $this->messages = $m;
     }
 
@@ -1026,9 +1028,9 @@ class Nolayer extends HTMLBase {
 
 // plx: adding iframe
 class IFrame extends HTMLBase {
-    var $classname = "iframe";
+    public $classname = "iframe";
 
-    function Frameset($a) {
+    public function __construct($a) {
         $this->setparam($a);
     }
 
@@ -1041,9 +1043,9 @@ class IFrame extends HTMLBase {
 
 
 class Frameset extends HTMLBase {
-    var $classname = "frameset";
+    public $classname = "frameset";
 
-    function Frameset($a) {
+    public function __construct($a) {
         $this->setparam($a);
     }
 
@@ -1055,9 +1057,9 @@ class Frameset extends HTMLBase {
 }
 
 class Frame extends HTMLBase {
-    var $classname = "frame";
+    public $classname = "frame";
 
-    function Frame($a) {
+    public function __construct($a) {
         $this->setparam($a);
     }
 
@@ -1067,10 +1069,10 @@ class Frame extends HTMLBase {
 }
 
 class Noframe extends HTMLBase {
-    var $classname = "noframe";
-    var $messages;
+    public $classname = "noframe";
+    public $messages;
 
-    function Noframe($m) {
+    public function __construct($m) {
         $this->messages = $m;
     }
 
@@ -1082,10 +1084,10 @@ class Noframe extends HTMLBase {
 }
 
 class Style extends HTMLBase {
-    var $classname = "style";
-    var $messages;
+    public $classname = "style";
+    public $messages;
 
-    function Style($m,$a = "") {
+    public function __construct($m,$a = "") {
         $this->messages = $m;
         $this->setparam($a);
     }

@@ -22,112 +22,112 @@ class LayersMenuCommon
 * @access private
 * @var string
 */
-var $_packageName;
+public $_packageName;
 /**
 * The version of the package
 * @access private
 * @var string
 */
-var $version;
+public $version;
 /**
 * The copyright of the package
 * @access private
 * @var string
 */
-var $copyright;
+public $copyright;
 /**
 * The author of the package
 * @access private
 * @var string
 */
-var $author;
+public $author;
 
 /**
 * URL to be prepended to the menu hrefs
 * @access private
 * @var string
 */
-var $prependedUrl = '';
+public $prependedUrl = '';
 /**
 * Do you want that code execution halts on error?
 * @access private
 * @var string
 */
-var $haltOnError = 'yes';
+public $haltOnError = 'yes';
 
 /**
 * The base directory where the package is installed
 * @access private
 * @var string
 */
-var $dirroot;
+public $dirroot;
 /**
 * The "libjs" directory of the package
 * @access private
 * @var string
 */
-var $libjsdir;
+public $libjsdir;
 /**
 * The directory where images related to the menu can be found
 * @access private
 * @var string
 */
-var $imgdir;
+public $imgdir;
 /**
 * The http path corresponding to imgdir
 * @access private
 * @var string
 */
-var $imgwww;
+public $imgwww;
 /**
 * The directory where icons of menu items can be found
 * @access private
 * @var string
 */
-var $icondir;
+public $icondir;
 /**
 * The http path corresponding to icondir
 * @access private
 * @var string
 */
-var $iconwww;
+public $iconwww;
 /**
 * This array may contain width and height of all icons
 * @access private
 * @var integer
 */
-var $iconsize = array();
+public $iconsize = array();
 /**
 * If this var is false, width and height of icons have to be detected; if this var is true, width and height of icons are not detected and are retrieved from the iconsize array
 * @access private
 * @var boolean
 */
-var $issetIconsize = false;
+public $issetIconsize = false;
 /**
 * The directory where templates can be found
 * @access private
 * @var string
 */
-var $tpldir;
+public $tpldir;
 /**
 * The string containing the menu structure
 * @access private
 * @var string
 */
-var $menuStructure;
+public $menuStructure;
 
 /**
 * It counts nodes for all menus
 * @access private
 * @var integer
 */
-var $_nodesCount;
+public $_nodesCount;
 /**
 * A multi-dimensional array to store informations for each menu entry
 * @access private
 * @var array
 */
-var $tree;
+public $tree;
 /**
 * A multi-dimensional array used only with the DB support; for each $menu_name, it stores the $cnt associated to each item id
 *
@@ -138,56 +138,56 @@ var $tree;
 * @access private
 * @var array
 */
-var $treecnt;
+public $treecnt;
 /**
 * The maximum hierarchical level of menu items
 * @access private
 * @var integer
 */
-var $_maxLevel;
+public $_maxLevel;
 /**
 * An array that counts the number of first level items for each menu
 * @access private
 * @var array
 */
-var $_firstLevelCnt;
+public $_firstLevelCnt;
 /**
 * An array containing the number identifying the first item of each menu
 * @access private
 * @var array
 */
-var $_firstItem;
+public $_firstItem;
 /**
 * An array containing the number identifying the last item of each menu
 * @access private
 * @var array
 */
-var $_lastItem;
+public $_lastItem;
 
 /**
 * Data Source Name: the connection string for PEAR DB
 * @access private
 * @var string
 */
-var $dsn = 'pgsql://dbuser:dbpass@dbhost/dbname';
+public $dsn = 'pgsql://dbuser:dbpass@dbhost/dbname';
 /**
 * DB connections are either persistent or not persistent
 * @access private
 * @var boolean
 */
-var $persistent = false;
+public $persistent = false;
 /**
 * Name of the table storing data describing the menu
 * @access private
 * @var string
 */
-var $tableName = 'phplayersmenu';
+public $tableName = 'phplayersmenu';
 /**
 * Name of the i18n table corresponding to $tableName
 * @access private
 * @var string
 */
-var $tableName_i18n = 'phplayersmenu_i18n';
+public $tableName_i18n = 'phplayersmenu_i18n';
 /**
 * Names of fields of the table storing data describing the menu
 *
@@ -197,7 +197,7 @@ var $tableName_i18n = 'phplayersmenu_i18n';
 * @access private
 * @var array
 */
-var $tableFields = array(
+public $tableFields = array(
 	'id'		=> 'id',
 	'parent_id'	=> 'parent_id',
 	'text'		=> 'text',
@@ -213,7 +213,7 @@ var $tableFields = array(
 * @access private
 * @var array
 */
-var $tableFields_i18n = array(
+public $tableFields_i18n = array(
 	'language'	=> 'language',
 	'id'		=> 'id',
 	'text'		=> 'text',
@@ -224,13 +224,13 @@ var $tableFields_i18n = array(
 * @access private
 * @var array
 */
-var $_tmpArray = array();
+public $_tmpArray = array();
 
 /**
 * The constructor method; it initializates the menu system
 * @return void
 */
-function LayersMenuCommon()
+public function __construct()
 {
 	$this->_packageName = 'PHP Layers Menu';
 	$this->version = '3.2.0-rc';
@@ -465,7 +465,7 @@ function setMenuStructureFile($tree_file)
 	}
 	$this->menuStructure = '';
 	while ($buffer = fgets($fd, 4096)) {
-		$buffer = ereg_replace(chr(13), '', $buffer);	// Microsoft Stupidity Suppression
+		$buffer = str_replace(chr(13), '', $buffer);	// Microsoft Stupidity Suppression
 		$this->menuStructure .= $buffer;
 	}
 	fclose($fd);
@@ -484,7 +484,7 @@ function setMenuStructureFile($tree_file)
 */
 function setMenuStructureString($tree_string)
 {
-	$this->menuStructure = ereg_replace(chr(13), '', $tree_string);	// Microsoft Stupidity Suppression
+	$this->menuStructure = str_replace(chr(13), '', $tree_string);	// Microsoft Stupidity Suppression
 	if ($this->menuStructure == '') {
 		$this->error('setMenuStructureString: empty string.');
 		return false;
@@ -573,7 +573,7 @@ function setTableFields($tableFields)
 		return false;
 	}
 	reset ($tableFields);
-	while (list($key, $value) = each($tableFields)) {
+	foreach($tableFields as $key => $value) {
 		$this->tableFields[$key] = ($value == '') ? "''" : $value;
 	}
 	return true;
@@ -596,7 +596,7 @@ function setTableFields_i18n($tableFields_i18n)
 		return false;
 	}
 	reset ($tableFields_i18n);
-	while (list($key, $value) = each($tableFields_i18n)) {
+	foreach($tableFields_i18n as $key => $value) {
 		$this->tableFields_i18n[$key] = ($value == '') ? "''" : $value;
 	}
 	return true;
@@ -755,7 +755,7 @@ function _getmicrotime()
 function _depthFirstSearch($menu_name, $tmpArray, $parent_id=1, $level=1)
 {
 	reset ($tmpArray);
-	while (list($id, $foobar) = each($tmpArray)) {
+	foreach($tmpArray as $id => $foobar) {
 		if ($foobar['parent_id'] == $parent_id) {
 			unset($tmpArray[$id]);
 			unset($this->_tmpArray[$id]);
@@ -790,7 +790,7 @@ function _postParse(
 	for ($cnt=$this->_firstItem[$menu_name]; $cnt<=$this->_lastItem[$menu_name]; $cnt++) {	// this counter scans all nodes of the new menu
 		$this->tree[$cnt]['child_of_root_node'] = ($this->tree[$cnt]['level'] == 1);
 		$this->tree[$cnt]['parsed_text'] = stripslashes($this->tree[$cnt]['text']);
-		$this->tree[$cnt]['parsed_href'] = (ereg_replace(' ', '', $this->tree[$cnt]['href']) == '') ? '#' : $this->prependedUrl . $this->tree[$cnt]['href'];
+		$this->tree[$cnt]['parsed_href'] = (str_replace(' ', '', $this->tree[$cnt]['href']) == '') ? '#' : $this->prependedUrl . $this->tree[$cnt]['href'];
 		$this->tree[$cnt]['parsed_title'] = ($this->tree[$cnt]['title'] == '') ? '' : ' title="' . stripslashes($this->tree[$cnt]['title']) . '"';
 		$fooimg = $this->icondir . $this->tree[$cnt]['icon'];
 		if ($this->tree[$cnt]['icon'] != '' && (substr($this->tree[$cnt]['icon'], 0, 7) == 'http://' || substr($this->tree[$cnt]['icon'], 0, 8) == 'https://')) {
@@ -918,7 +918,7 @@ function setSelectedItemByUrl($menu_name, $url)
 }
 
 /**
-* A method to select the current item of $menu_name specifying a regular expression that matches (a substring of) the current URL; just the same as the setSelectedItemByUrl() method, but using eregi() instead of strpos()
+* A method to select the current item of $menu_name specifying a regular expression that matches (a substring of) the current URL; just the same as the setSelectedItemByUrl() method, but using preg_match() (case-insensitive) instead of strpos()
 * @access public
 * @param string $menu_name the name of the menu for which the current item
 *   has to be selected
@@ -929,7 +929,7 @@ function setSelectedItemByUrl($menu_name, $url)
 function setSelectedItemByUrlEregi($menu_name, $url_eregi)
 {
 	for ($cnt=$this->_firstItem[$menu_name]; $cnt<=$this->_lastItem[$menu_name]; $cnt++) {  // this counter scans all nodes of the new menu
-		if (eregi($url_eregi, $this->tree[$cnt]['parsed_href'])) {
+		if (preg_match('#' . $url_eregi . '#i', $this->tree[$cnt]['parsed_href'])) {
 			$this->tree[$cnt]['selected'] = true;
 			break;
 		}

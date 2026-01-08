@@ -57,7 +57,10 @@ list($userfld) = myRegister("A:userfld");  // from modifyipform - need to add re
 list($hname) = myRegister("S:hname");  // from modifyipformmul - need to add rest flds
 list($search, $expr) = myRegister("S:search S:expr");  // search fields
 list($user, $location, $descrip, $telno, $macaddr) = myRegister("S:user S:location S:descrip S:telno S:macaddr");
-list($request) = myRegister("I:request");  // from modifyipform - dummy variable entered 
+list($request) = myRegister("I:request");  // from modifyipform - dummy variable entered
+list($ip) = myRegister("A:ip");  // IP address(es) - can be array
+list($md5str) = myRegister("S:md5str");  // MD5 hash for concurrency check
+list($lnk) = myRegister("S:lnk");  // linked address for NAT 
                                            // from displayrequestip.php
 
 $formerror="";
@@ -254,6 +257,7 @@ if ($_POST) {
                             users.userid=usergrp.userid");
 
                         // Test if there is really someone to send a mail
+                        $sendwarningmail = FALSE;
                         foreach($adminemails as $emailtmp) {
                             if (!empty($emailtmp)) {
                                 $sendwarningmail=TRUE;
@@ -328,7 +332,7 @@ if ($_POST) {
                                 $body="";
                                 if ($result=$ds->GetCustomerDNSInfo($cust)) {
                                     while ($row = $result->FetchRow()) {
-                                        $body.="DNS server: ".$row[ipaddr]."\n";
+                                        $body.="DNS server: ".$row['ipaddr']."\n";
                                     }
                                 }
                                 if (!empty($body))
@@ -612,7 +616,7 @@ $export->saveRow();
 
 $pollcnt=array("d"=>0, "w"=>0, "m"=>0, "y"=>0);
 // note for translations to work here, the next field should have exactly 4x elements
-$pollflag=split(":", my_("D:W:M:Y"));
+$pollflag=explode(":", my_("D:W:M:Y"));
 $pollflag["d"]=$pollflag[0];
 $pollflag["w"]=$pollflag[1];
 $pollflag["m"]=$pollflag[2];
@@ -861,15 +865,15 @@ printhtml($p);
 // sequence
 class myFetchRow {
 
-    var $result;
-    var $baseaddr;
-    var $subnetsize;
+    public $result;
+    public $baseaddr;
+    public $subnetsize;
 
-    var $pointer=-1;
-    var $saverow;
-    var $search;
+    public $pointer=-1;
+    public $saverow;
+    public $search;
 
-    function myFetchRow(&$result, $baseaddr, $subnetsize, $search=FALSE) {
+    public function __construct($result, $baseaddr, $subnetsize, $search=FALSE) {
 
         $this->result=$result;
         $this->baseaddr=$baseaddr;
@@ -912,6 +916,10 @@ class myFetchRow {
 
     function __MoveNext() {
         // get row using adodb class
+        if ($this->result === null || $this->result === false) {
+            $this->saverow = false;
+            return false;
+        }
         $this->saverow=$this->result->FetchRow();
         return $this->saverow;
     }
@@ -926,7 +934,7 @@ function DeleteDNS($ds, $w, $cust, $ip) {
 
     if (DNSAUTOCREATE === TRUE) {
         // check if there are A records for this customers domains?
-        $result = &$ds->ds->Execute("SELECT fwdzone.domain, fwdzone.data_id, fwdzonerec.host, 
+        $result = $ds->ds->Execute("SELECT fwdzone.domain, fwdzone.data_id, fwdzonerec.host, 
                 fwdzonerec.ip_hostname, fwdzonerec.recidx
                 FROM fwdzone, fwdzonerec 
                 WHERE fwdzone.data_id=fwdzonerec.data_id AND
@@ -948,7 +956,7 @@ function DeleteDNS($ds, $w, $cust, $ip) {
             $domain=$row["domain"];
             $hnametmp=$row["host"];
 
-            $result = &$ds->ds->Execute("DELETE FROM fwdzonerec 
+            $result = $ds->ds->Execute("DELETE FROM fwdzonerec 
                     WHERE customer=$cust AND recidx=$recidx") and
             $ds->ds->Execute("UPDATE fwdzone SET error_message=".$ds->ds->qstr("E").
                     " WHERE customer=$cust AND data_id=".$dom_id) and
@@ -980,7 +988,7 @@ function UpdateDNS($ds, $w, $cust, $hname, $ip) {
     }
     else if (DNSAUTOCREATE === TRUE) {
         // check if there are A records for this customers domains?
-        $result = &$ds->ds->Execute("SELECT fwdzone.data_id, fwdzone.domain, fwdzonerec.host, 
+        $result = $ds->ds->Execute("SELECT fwdzone.data_id, fwdzone.domain, fwdzonerec.host, 
                 fwdzonerec.ip_hostname 
                 FROM fwdzone, fwdzonerec 
                 WHERE fwdzone.data_id=fwdzonerec.data_id AND
@@ -1045,7 +1053,7 @@ function UpdateDNS($ds, $w, $cust, $hname, $ip) {
                 $regex = "~";
             }
 
-            $result = &$ds->ds->Execute("SELECT length(domain) AS domainlen, data_id, domain
+            $result = $ds->ds->Execute("SELECT length(domain) AS domainlen, data_id, domain
                     FROM fwdzone
                     WHERE customer=$cust AND
                     ".$ds->ds->qstr($hname."$")." $regex domain

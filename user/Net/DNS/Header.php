@@ -39,54 +39,54 @@ class Net_DNS_Header
      *
      * The request id of the packet represented as  a 16 bit integer.
      */
-    var $id;
+    public $id;
     /**
      * The QR bit in a DNS packet header
      *
      * The QR bit as described in RFC1035.  QR is set to 0 for queries, and
      * 1 for repsones.
      */
-    var $qr;
+    public $qr;
     /**
      * The OPCODE name of this packet.
      *
      * The string value (name) of the opcode for the DNS packet.
      */
-    var $opcode;
+    public $opcode;
     /**
      * The AA (authoritative answer) bit in a DNS packet header
      *
      * The AA bit as described in RFC1035.  AA is set to  1 if the answer
      * is authoritative.  It has no meaning if QR is set to 0.
      */
-    var $aa;
+    public $aa;
     /**
      * The TC (truncated) bit in a DNS packet header
      *
      * This flag is set to 1 if the response was truncated.  This flag has
      * no meaning in a query packet.
      */
-    var $tc;
+    public $tc;
     /**
      * The RD (recursion desired) bit in a DNS packet header
      *
      * This bit should be set to 1 in a query if recursion  is desired by
      * the DNS server.
      */
-    var $rd;
+    public $rd;
     /**
      * The RA (recursion available) bit in a DNS packet header
      *
      * This bit is set to 1 by the DNS server if the server is willing to
      * perform recursion.
      */
-    var $ra;
+    public $ra;
     /**
      * The RCODE name for this packet.
      *
      * The string value (name) of the rcode for the DNS packet.
      */
-    var $rcode;
+    public $rcode;
     /**
      * Number of questions contained within the packet
      *
@@ -96,7 +96,7 @@ class Net_DNS_Header
      * @var integer $qdcount
      * @see     Net_DNS_Question class
      */
-    var $qdcount;
+    public $qdcount;
     /**
      * Number of answer RRs contained within the packet
      *
@@ -106,7 +106,7 @@ class Net_DNS_Header
      * @var integer $ancount
      * @see     Net_DNS_RR class
      */
-    var $ancount;
+    public $ancount;
     /**
      * Number of authority RRs within the packet
      *
@@ -116,7 +116,7 @@ class Net_DNS_Header
      * @var integer $nscount
      * @see     Net_DNS_RR class
      */
-    var $nscount;
+    public $nscount;
     /**
      * Number of additional RRs within the packet
      *
@@ -126,7 +126,7 @@ class Net_DNS_Header
      * @var integer $arcount
      * @see     Net_DNS_RR class
      */
-    var $arcount;
+    public $arcount;
 
     /* }}} */
     /* class constructor - Net_DNS_Header($data = "") {{{ */
@@ -140,7 +140,7 @@ class Net_DNS_Header
      * @return  object  Net_DNS_Header
      * @access public
      */
-    function Net_DNS_Header($data = '')
+    public function __construct($data = '')
     {
         if ($data != '') {
             /*

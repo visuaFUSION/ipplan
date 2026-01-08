@@ -30,8 +30,8 @@ require_once("../class.templib.php");
 // denial of service on the database as this feature is not authenticated
 define("MAXREQUESTS", "100");
 
-// disable or enable drop down menu on request page - default disabled
-define("MENU", FALSE);
+// disable or enable drop down menu on request page
+define("MENU", TRUE);
 
 if (!REQUESTENABLED) {
     die("IP address request system has been disabled by the administrator.");
@@ -197,7 +197,7 @@ insert($w,textbrbr(my_("Complete the details below to request an IP address. An 
 
 // create list of customers to display based on REQUESTCUST variable
 $sql = "";
-$lst = split(",", REQUESTCUST);
+$lst = explode(",", REQUESTCUST);
 if (REQUESTCUST != "" and !empty($lst)) {
     foreach ($lst as $value) {
         $i=(int)$value;  // force to int

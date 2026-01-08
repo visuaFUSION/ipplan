@@ -31,13 +31,13 @@
 class Net_DNS_Question
 {
     /* class variable definitions {{{ */
-    var $qname = NULL;
-    var $qtype = NULL;
-    var $qclass = NULL;
+    public $qname = NULL;
+    public $qtype = NULL;
+    public $qclass = NULL;
 
     /* }}} */
     /* class constructor Net_DNS_Question($qname, $qtype, $qclass) {{{ */
-    function Net_DNS_Question($qname, $qtype, $qclass)
+    public function __construct($qname, $qtype, $qclass)
     {
         if (   is_null(Net_DNS::typesbyname($qtype))
                 &&  !is_null(Net_DNS::classesbyname($qtype))

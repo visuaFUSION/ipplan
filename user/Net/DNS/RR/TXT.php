@@ -29,17 +29,17 @@
 class Net_DNS_RR_TXT extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $text;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $text;
 
     /* }}} */
     /* class constructor - RR(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_TXT(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -58,7 +58,7 @@ class Net_DNS_RR_TXT extends Net_DNS_RR
             $data = str_replace('\\\\', chr(1) . chr(1), $data); /* disguise escaped backslash */
             $data = str_replace('\\"', chr(2) . chr(2), $data); /* disguise \" */
 
-            ereg('("[^"]*"|[^ \t]*)[ \t]*$', $data, $regs);
+            preg_match('/("[^"]*"|[^ \t]*)[ \t]*$/', $data, $regs);
             $regs[1] = str_replace(chr(2) . chr(2), '\\"', $regs[1]);
             $regs[1] = str_replace(chr(1) . chr(1), '\\\\', $regs[1]);
             $regs[1] = stripslashes($regs[1]);

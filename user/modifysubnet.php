@@ -241,7 +241,7 @@ if ($_POST) {
             if($ds->ds->GetRow("SELECT baseindex
                         FROM baseadd
                         WHERE baseindex=$baseindex")) {   // should have FOR UPDATE here!
-                $result = &$ds->ds->Execute("UPDATE baseadd
+                $result = $ds->ds->Execute("UPDATE baseadd
                         SET info=".$ds->ds->qstr($info)."
                         WHERE baseindex=$baseindex");
             // this generates a "duplicate key" error if no update
@@ -250,7 +250,7 @@ if ($_POST) {
         }
             else {
                 if (!empty($info)) {
-                    $result = &$ds->ds->Execute("INSERT INTO baseadd
+                    $result = $ds->ds->Execute("INSERT INTO baseadd
                             (info, baseindex)
                             VALUES
                             (".$ds->ds->qstr($info).", $baseindex)");

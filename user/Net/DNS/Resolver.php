@@ -41,7 +41,7 @@ class Net_DNS_Resolver
      * @var array   $nameservers
      * @access public
      */
-    var $nameservers;
+    public $nameservers;
     /**
      * The UDP port to use for the query (default = 53)
      *
@@ -50,7 +50,7 @@ class Net_DNS_Resolver
      * @var integer $port
      * @access public
      */
-    var $port;
+    public $port;
     /**
      * The domain in which the resolver client host resides.
      *
@@ -59,7 +59,7 @@ class Net_DNS_Resolver
      * @var string $domain
      * @access public
      */
-    var $domain;
+    public $domain;
     /**
      * The searchlist to apply to unqualified hosts
      *
@@ -69,7 +69,7 @@ class Net_DNS_Resolver
      * @var array $searchlist
      * @access public
      */
-    var $searchlist;
+    public $searchlist;
     /**
      * The number of seconds between retransmission of unaswered queries
      *
@@ -78,7 +78,7 @@ class Net_DNS_Resolver
      * @var integer $retrans
      * @access public
      */
-    var $retrans;
+    public $retrans;
     /**
      * The number of times unanswered requests should be retried
      *
@@ -87,7 +87,7 @@ class Net_DNS_Resolver
      * @var integer $retry
      * @access public
      */
-    var $retry;
+    public $retry;
     /**
      * Whether or not to use TCP (Virtual Circuits) instead of UDP
      *
@@ -97,11 +97,11 @@ class Net_DNS_Resolver
      * @var boolean $usevc
      * @access public
      */
-    var $usevc;
+    public $usevc;
     /**
      * Unknown
      */
-    var $stayopen;
+    public $stayopen;
     /**
      * Ignore TC (truncated) bit
      *
@@ -112,7 +112,7 @@ class Net_DNS_Resolver
      * @access public
      * @var boolean $igntc
      */
-    var $igntc;
+    public $igntc;
     /**
      * Recursion Desired
      *
@@ -123,15 +123,15 @@ class Net_DNS_Resolver
      * @var boolean $recurse
      * @access public
      */
-    var $recurse;
+    public $recurse;
     /**
      * Unknown
      */
-    var $defnames;
+    public $defnames;
     /**
      * Unknown
      */
-    var $dnsrch;
+    public $dnsrch;
     /**
      * Contains the value of the last error returned by the resolver.
      *
@@ -140,7 +140,7 @@ class Net_DNS_Resolver
      * @var string $errorstring
      * @access public
      */
-    var $errorstring;
+    public $errorstring;
     /**
      * The origin of the packet.
      *
@@ -150,7 +150,7 @@ class Net_DNS_Resolver
      * @var string $answerfrom
      * @access public
      */
-    var $answerfrom;
+    public $answerfrom;
     /**
      * The size of the answer packet.
      *
@@ -160,29 +160,29 @@ class Net_DNS_Resolver
      * @var string $answersize
      * @access public
      */
-    var $answersize;
+    public $answersize;
     /**
      * The number of seconds after which a TCP connetion should timeout
      *
      * @var integer $tcp_timeout
      * @access public
      */
-    var $udp_timeout;
+    public $udp_timeout;
     /**
      * The number of seconds after which a UDP connetion should timeout
      *
      * @var integer $udp_timeout
      * @access public
      */
-    var $tcp_timeout;
+    public $tcp_timeout;
     /**
      * The location of the system resolv.conf file.
      *
      * The location of the system resolv.conf file.
-     * 
+     *
      * @var string $resolv_conf
      */
-    var $resolv_conf = '/etc/resolv.conf';
+    public $resolv_conf = '/etc/resolv.conf';
     /**
      * The name of the user defined resolv.conf
      *
@@ -193,7 +193,7 @@ class Net_DNS_Resolver
      * @var string $dotfile
      * @see Net_DNS_Resolver::$confpath
      */
-    var $dotfile = '.resolv.conf';
+    public $dotfile = '.resolv.conf';
     /**
      * A array of directories to search for the user's resolver config
      *
@@ -202,7 +202,7 @@ class Net_DNS_Resolver
      * @var string $confpath
      * @see Net_DNS_Resolver::$dotfile
      */
-    var $confpath;
+    public $confpath;
     /**
      * debugging flag
      *
@@ -212,7 +212,7 @@ class Net_DNS_Resolver
      * @var boolean $debug;
      * @access public
      */
-    var $debug;
+    public $debug;
     /**
      * use the (currently) experimental PHP socket library
      *
@@ -222,14 +222,14 @@ class Net_DNS_Resolver
      * @var boolean $useEnhancedSockets;
      * @access public
      */
-    var $useEnhancedSockets = true;
+    public $useEnhancedSockets = true;
     /**
      * An array of sockets connected to a name servers
      *
      * @var array $sockets
      * @access private
      */
-    var $sockets;
+    public $sockets;
     /**
      * axfr tcp socket
      *
@@ -238,7 +238,7 @@ class Net_DNS_Resolver
      * @var resource $_axfr_sock;
      * @access private
      */
-    var $_axfr_sock;
+    public $_axfr_sock;
     /**
      * axfr resource record lsit
      *
@@ -247,7 +247,7 @@ class Net_DNS_Resolver
      * @var resource $_axfr_rr;
      * @access private
      */
-    var $_axfr_rr;
+    public $_axfr_rr;
     /**
      * axfr soa count
      *
@@ -256,7 +256,7 @@ class Net_DNS_Resolver
      * @var resource $_axfr_soa_count;
      * @access private
      */
-    var $_axfr_soa_count;
+    public $_axfr_soa_count;
 
 
     /* }}} */
@@ -264,7 +264,7 @@ class Net_DNS_Resolver
     /**
      * Initializes the Resolver Object
      */
-    function Net_DNS_Resolver($default = array())
+    public function __construct($default = array())
     {
         $this->nameservers =        array();
         $this->port =               53;
@@ -346,11 +346,11 @@ class Net_DNS_Resolver
 
         while (! feof($f)) {
             $line = chop(fgets($f, 10240));
-            $line = ereg_replace('(.*)[;#].*', '\\1', $line);
-            if (ereg("^[ \t]*$", $line, $regs)) {
+            $line = preg_replace('/(.*)[;#].*/', '\\1', $line);
+            if (preg_match("/^[ \t]*$/", $line, $regs)) {
                 continue;
             }
-            ereg("^[ \t]*([^ \t]+)[ \t]+([^ \t]+)", $line, $regs);
+            preg_match("/^[ \t]*([^ \t]+)[ \t]+([^ \t]+)/", $line, $regs);
             $option = $regs[1];
             $value = $regs[2];
 
@@ -362,7 +362,7 @@ class Net_DNS_Resolver
                     $this->searchlist[count($this->searchlist)] = $regs[2];
                     break;
                 case 'nameserver':
-                    foreach (split(' ', $regs[2]) as $ns)
+                    foreach (explode(' ', $regs[2]) as $ns)
                         $this->nameservers[count($this->nameservers)] = $ns;
                     break;
             }
@@ -378,11 +378,11 @@ class Net_DNS_Resolver
     function read_env()
     {
         if (getenv('RES_NAMESERVERS')) {
-            $this->nameservers = split(' ', getenv('RES_NAMESERVERS'));
+            $this->nameservers = explode(' ', getenv('RES_NAMESERVERS'));
         }
 
         if (getenv('RES_SEARCHLIST')) {
-            $this->searchlist = split(' ', getenv('RES_SEARCHLIST'));
+            $this->searchlist = explode(' ', getenv('RES_SEARCHLIST'));
         }
 
         if (getenv('LOCALDOMAIN')) {
@@ -390,9 +390,9 @@ class Net_DNS_Resolver
         }
 
         if (getenv('RES_OPTIONS')) {
-            $env = split(' ', getenv('RES_OPTIONS'));
+            $env = explode(' ', getenv('RES_OPTIONS'));
             foreach ($env as $opt) {
-                list($name, $val) = split(':', $opt);
+                list($name, $val) = explode(':', $opt);
                 if ($val == '') {
                     $val = 1;
                 }

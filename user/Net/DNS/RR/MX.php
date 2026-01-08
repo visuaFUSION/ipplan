@@ -29,18 +29,18 @@
 class Net_DNS_RR_MX extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $preference;
-    var $exchange;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $preference;
+    public $exchange;
 
     /* }}} */
     /* class constructor - RR(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_MX(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -58,9 +58,9 @@ class Net_DNS_RR_MX extends Net_DNS_RR
                 $this->exchange = $exchange;
             }
         } else {
-            ereg("([0-9]+)[ \t]+(.+)[ \t]*$", $data, $regs);
+            preg_match("/([0-9]+)[ \t]+(.+)[ \t]*$/", $data, $regs);
             $this->preference = $regs[1];
-            $this->exchange = ereg_replace('(.*)\.$', '\\1', $regs[2]);
+            $this->exchange = preg_replace('/(.*)\.$/', '\\1', $regs[2]);
         }
     }
 

@@ -41,7 +41,7 @@ newhtml($p);
 $w=myheading($p, $title, true);
 
 // explicitly cast variables as security measure against SQL injection
-list($cust) = myRegister("I:cust");
+list($cust, $ipplanCustomer) = myRegister("I:cust I:ipplanCustomer");
 
 // display opening text
 insert($w,textbr());

@@ -20,17 +20,20 @@
 
 // NOTE: DO NOT REMOVE ANY LINES FROM THIS FILE
 
+// Version format: YYYY.M.D.revision (e.g., 2025.1.7.1 = first release on Jan 7, 2025)
+define("IPPLAN_VERSION", "2026.1.8.2");
+
 // define some global variables for database connections
-// currently mysql and postgres7 are valid database types.
-// maxsql should be used for mysql with transactions (innodb)
-// oci8po is valid for oracle 9i (older versions of oracle
-// are not supported). sybase, ado_mssql and mssql may work too.
-// odbc_mssql should work for windows systems using IIS and mssql
+// For MySQL: use 'mysqli' (supports transactions, required for PHP 7+)
+// For PostgreSQL: use 'postgres9' or 'postgres8'
+// For Oracle: use 'oci8po' (Oracle 9i+)
+// For MS SQL: use 'mssql', 'ado_mssql', or 'odbc_mssql'
+// Note: Old 'mysql' and 'maxsql' drivers removed in PHP 7+ (use mysqli instead)
 // look in the adodb/drivers directory for additional drivers.
 
 // the database user and password is NOT the same user and password
 // used to access IPplan as a regular user.
-define("DBF_TYPE", 'maxsql');
+define("DBF_TYPE", 'mysqli');
 define("DBF_HOST", 'localhost');
 define("DBF_USER", 'ipplan');
 define("DBF_NAME", 'ipplan');
@@ -284,6 +287,12 @@ define("AUTH_INTERNAL", TRUE);
 // useful for testing
 define("AUTH_LOGOUT", FALSE);
 
+// restrict system administration documentation to privileged users
+// when TRUE, admin docs are only visible to users who belong to a group
+// with "create/modify/delete customers" permission (createcust='Y')
+// set to FALSE to allow all authenticated users to see admin documentation
+define("RESTRICT_ADMIN_DOCS", TRUE);
+
 // default read-only SNMP community string - used for reading routing
 // tables and probing devices
 define("SNMP_COMMUNITY", 'public');
@@ -322,5 +331,19 @@ define("BASE_URL", '');
 // in ipplanlib.php
 // for this to work, audit log (AUDIT config option) must be true
 define("EXT_FUNCTION", FALSE);
+
+//---------------------START OF SUPPORT/ISSUE TRACKING-------------------
+
+// Issue tracking platform name (displayed in error messages)
+define("ISSUE_TRACKER_NAME", "GitHub");
+
+// URL to issue tracking system for bug reports
+define("ISSUE_TRACKER_URL", "https://github.com/visuafusion/ipplan/issues");
+
+// URL to community discussions/support forum
+define("DISCUSSIONS_URL", "https://github.com/visuafusion/ipplan/discussions");
+
+// URL to project history information
+define("PROJECT_INFO_HISTORY", "https://github.com/visuafusion/ipplan?tab=readme-ov-file#project-history");
 
 ?>

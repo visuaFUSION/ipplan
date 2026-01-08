@@ -30,17 +30,17 @@
 class Net_DNS_RR_AAAA extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $address;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $address;
 
     /* }}} */
     /* class constructor - Net_DNS_RR_AAAA(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_AAAA(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;

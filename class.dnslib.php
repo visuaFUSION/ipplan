@@ -24,26 +24,26 @@ require_once(dirname(__FILE__)."/config.php");
 class DNSZone extends IPplanDbf {
 
     // form variables
-    var $hname;
-    var $ttl;
-    var $refresh;
-    var $retry;
-    var $expire;
-    var $minimum;
-    var $responsiblemail;
-    var $slaveonly;
-    var $zonepath;
-    var $seczonepath;
-    var $info="";
+    public $hname;
+    public $ttl;
+    public $refresh;
+    public $retry;
+    public $expire;
+    public $minimum;
+    public $responsiblemail;
+    public $slaveonly;
+    public $zonepath;
+    public $seczonepath;
+    public $info="";
 
-    var $serialdate=0;
-    var $serialnum=0;
+    public $serialdate=0;
+    public $serialnum=0;
 
     // local class variables
-    var $grps;
-    var $errstr = "";
-    var $err = 1;
-    var $clone = 0;
+    public $grps;
+    public $errstr = "";
+    public $err = 1;
+    public $clone = 0;
 
     function SetSOA($hname, $ttl, $refresh, $retry, $expire, $minimum, 
             $responsiblemail, $slaveonly, $zonepath, $seczonepath, $info="") {
@@ -163,13 +163,13 @@ exit;
 // specific forward zone functions
 class DNSfwdZone extends DNSZone {
 
-    var $cust;
-    var $dataid;
-    var $domain;
-    var $server;
-    var $createmod;
-    var $expiremod;
-    var $regmod;
+    public $cust;
+    public $dataid;
+    public $domain;
+    public $server;
+    public $createmod;
+    public $expiremod;
+    public $regmod;
 
     function SetForm($cust, $dataid, $domain) {
 
@@ -700,12 +700,12 @@ class DNSfwdZone extends DNSZone {
 // specific forward zone functions
 class DNSrevZone extends DNSZone {
 
-    var $cust;
-    var $zoneid;
-    var $zone;
-    var $zoneip;
-    var $size;
-    var $server;
+    public $cust;
+    public $zoneid;
+    public $zone;
+    public $zoneip;
+    public $size;
+    public $server;
 
     function SetForm($cust, $zoneid, $zone, $zoneip, $size) {
 
@@ -754,7 +754,7 @@ class DNSrevZone extends DNSZone {
             }
 
             // now split ip address
-            list($oc1, $oc2, $oc3, $oc4, $tail) = split("\.", $host, 5);
+            list($oc1, $oc2, $oc3, $oc4, $tail) = explode(".", $host, 5);
             $ipaddr="$oc4.$oc3.$oc2.$oc1";
             if (testIP($ipaddr)) {
                 $this->errstr .= sprintf(my_("Invalid address %s"), $ipaddr)."\n";

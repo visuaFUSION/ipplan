@@ -27,41 +27,27 @@ define("ALLNETS", "255.255.255.255");
 // compress output of all pages - could break things!
 // breaks if there is space after last php close tag in script!
 // must flush with ob_flush if sending from system() call
-// required php 4.0.4, but ipplan requires 4.1.0
-if (!defined("NOCOMPRESS"))
-    ob_start("ob_gzhandler");
-
-// hack to make sure systems with register_globals off work
-// very ugly, but it works. cannot be in function else variables
-// must be declared global. will be called for each script as 
-// this lib is always executed.
-$types_to_register = array('_GET','_POST','_COOKIE','_SESSION','_SERVER');
-foreach ($types_to_register as $type) {
-    $arr = @${ $type }; 
-    // get rid of magic_quotes else get multiple quotes on each submit
-    if (($type=="_GET" or $type=="_POST") and get_magic_quotes_gpc())  {
-        $arr=stripslashes_deep($arr);
-        // print_r(array_keys($arr));
-    }
-    if (@count($arr) > 0) {
-        extract($arr, EXTR_OVERWRITE);
+// Note: ob_gzhandler can cause issues on IIS/Windows - use NOCOMPRESS to disable
+if (!defined("NOCOMPRESS")) {
+    // Only use gzip if zlib is available and we're not on IIS (which can have issues)
+    if (function_exists('ob_gzhandler') && extension_loaded('zlib')) {
+        // Check if running on IIS - may need to disable compression
+        $isIIS = (isset($_SERVER['SERVER_SOFTWARE']) && strpos($_SERVER['SERVER_SOFTWARE'], 'IIS') !== false);
+        if (!$isIIS) {
+            ob_start("ob_gzhandler");
+        } else {
+            // On IIS, use regular output buffering without gzip
+            ob_start();
+        }
+    } else {
+        ob_start();
     }
 }
 
-// set the error reporting level for IPplan
-if (phpversion()<"5.3") {
-    error_reporting(E_ALL ^ E_NOTICE);
-}
-else {
-    error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
-}
-//error_reporting(E_ALL);
+// set the error reporting level for IPplan (PHP 8.2+)
+error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
 // set to the user defined error handler
 set_error_handler("myErrorHandler");
-// turn off those pesky quotes
-if (phpversion()<"5.3") {
-    set_magic_quotes_runtime(0);
-}
 
 /*********** end of global code which runs for each script *********/
 
@@ -466,13 +452,15 @@ function base_url() {
         // dirname strips trailing slash!
         $tmp = dirname($_SERVER["PHP_SELF"]);
         //$tmp = dirname($_SERVER["SCRIPT_NAME"]);
-        $tmp = eregi_replace("/user$","",$tmp);
-        $tmp = eregi_replace("/admin$","",$tmp);
+        $tmp = preg_replace("/\\/user$/i", "", $tmp);
+        $tmp = preg_replace("/\\/admin$/i", "", $tmp);
+
+        // Normalize backslashes to forward slashes (Windows compatibility)
+        $tmp = str_replace('\\', '/', $tmp);
 
         // installed in root of a virtual server? then return empty path
-        // second case here is for wierd Windows behaviour - dirname strips
-        // trailing / but not \
-        if ($tmp == "/" or $tmp == '/\\\\' or $tmp == '/\\') return "";
+        // Handle various edge cases for root installations
+        if ($tmp == "/" || $tmp == "" || $tmp == "." || $tmp == '//') return "";
 
         return $tmp;
     }
@@ -488,8 +476,8 @@ function base_dir() {
     // dirname strips trailing slash!
     $tmp = dirname(__FILE__);
     //$tmp = dirname($_SERVER["SCRIPT_FILENAME"]);
-    $tmp = eregi_replace("/user$","",$tmp);
-    $tmp = eregi_replace("/admin$","",$tmp);
+    $tmp = preg_replace("/\\/user$/i", "", $tmp);
+    $tmp = preg_replace("/\\/admin$/i", "", $tmp);
 
     return $tmp;
 
@@ -530,7 +518,7 @@ function getAuthUsername() {
     // (see http://www.php.net/features.http-auth - example 34.3)
     if ( (!(isset($MY_SERVER_VARS[AUTH_VAR])))      &&
             (isset($MY_SERVER_VARS["HTTP_AUTHORIZATION"]))) {
-        if (ereg("^Basic ", $MY_SERVER_VARS["HTTP_AUTHORIZATION"]) ) {
+        if (preg_match("/^Basic /", $MY_SERVER_VARS["HTTP_AUTHORIZATION"]) ) {
             list($MY_SERVER_VARS[AUTH_VAR],$MY_SERVER_VARS["PHP_AUTH_PW"]) =
                 explode(':',base64_decode(substr($MY_SERVER_VARS["HTTP_AUTHORIZATION"], 6)));
         }
@@ -630,7 +618,7 @@ function myheading($q, $title, $displaymenu=true) {
 
     insert($w,$con=container("div",array("class"=>"normalbox")));
     insert($w,$con1=container("div",array("class"=>"footerbox")));
-    insert($con1,block("IPPlan v4.92b"));
+    insert($con1,block("IPPlan v" . IPPLAN_VERSION));
     return $con;
 
 }
@@ -651,14 +639,14 @@ class mySearch {
     // vars - the hidden vars to maintain in this subform for submission - array, probably get or post
     // search - the search string
     // frmvar - the form variable to use
-    var $w, $vars, $search, $frmvar;
+    public $w, $vars, $search, $frmvar;
 
-    var $expr="";           // the last expression used - for form resubmit
-    var $expr_disp=FALSE;   // do we require an expression drop down?
-    var $method="get";
-    var $legend;
+    public $expr="";           // the last expression used - for form resubmit
+    public $expr_disp=FALSE;   // do we require an expression drop down?
+    public $method="get";
+    public $legend;
 
-    function mySearch(&$w, $vars, $search, $frmvar) {
+    public function __construct(&$w, $vars, $search, $frmvar) {
         $this->w=$w;
         $this->vars=$vars;
         $this->search=$search;
@@ -746,8 +734,11 @@ function myErrorHandler ($errno, $errstr, $errfile, $errline) {
 
     echo "<div class=errorbox>";
     if (!$beenhere) {
-        echo "If you see this message, submit a detailed bug report on Sourceforge including ";
-        echo "the message below, the database platform used and the steps to perform to recreate ";
+        $trackerName = defined('ISSUE_TRACKER_NAME') ? ISSUE_TRACKER_NAME : 'GitHub';
+        $trackerUrl = defined('ISSUE_TRACKER_URL') ? ISSUE_TRACKER_URL : 'https://github.com/visuafusion/ipplan/issues';
+        echo "If you see this message, submit a detailed bug report on ";
+        echo "<a href=\"" . htmlspecialchars($trackerUrl) . "\" target=\"_blank\">" . htmlspecialchars($trackerName) . "</a> ";
+        echo "including the message below, the database platform used and the steps to perform to recreate ";
         echo "the problem.<p>";
         echo "PHP ".PHP_VERSION." (".PHP_OS.")<br>\n";
         $beenhere=TRUE;
@@ -857,24 +848,24 @@ function user_trigger($action) {
 function myRegister($vars) {
 
     $newvars=array();
-    $tokens = split(" ", $vars);
+    $tokens = explode(" ", $vars);
 
     foreach ($tokens as $value) {
-        list($code, $variable) = split(":", $value);
+        list($code, $variable) = explode(":", $value);
         switch ($code) {
             case "A":
                 $newvars[]=isset($_REQUEST["$variable"]) ? stripslashes_deep($_REQUEST["$variable"]) : array();
-                continue;
+                break;
             case "S":
                 $newvars[]=isset($_REQUEST["$variable"]) ? stripslashes((string)$_REQUEST["$variable"]) : "";
-                continue;
-            case "B":  
+                break;
+            case "B":
                 // use floor here to convert to float as int is just not big enough for ip addresses
                 $newvars[]=isset($_REQUEST["$variable"]) ? floor($_REQUEST["$variable"]) : 0;
-                continue;
-            case "I":  
+                break;
+            case "I":
                 $newvars[]=isset($_REQUEST["$variable"]) ? (int)$_REQUEST["$variable"] : 0;
-                continue;
+                break;
         }
     }
 

@@ -22,27 +22,27 @@ class TreeMenu extends LayersMenuCommon
 * @access private
 * @var string
 */
-var $treeMenuImagesType;
+public $treeMenuImagesType;
 /**
 * Prefix for filenames of images of a theme
 * @access private
 * @var string
 */
-var $treeMenuTheme;
+public $treeMenuTheme;
 /**
 * An array where we store the Tree Menu code for each menu
 * @access private
 * @var array
 */
-var $_treeMenu;
+public $_treeMenu;
 
 /**
 * The constructor method; it initializates the menu system
 * @return void
 */
-function TreeMenu()
+public function __construct()
 {
-	$this->LayersMenuCommon();
+	parent::__construct();
 
 	$this->treeMenuImagesType = 'png';
 	$this->treeMenuTheme = '';

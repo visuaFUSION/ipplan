@@ -43,7 +43,7 @@ class Net_DNS_Packet
      * @var boolean $debug
      * @access  public
      */
-    var $debug;
+    public $debug;
     /**
      * A packet Header object.
      *
@@ -53,7 +53,7 @@ class Net_DNS_Packet
      * @var object Net_DNS_Header $header
      * @access  public
      */
-    var $header;
+    public $header;
     /**
      * A hash of compressed labels
      *
@@ -62,7 +62,7 @@ class Net_DNS_Packet
      *
      * @var array   $compnames
      */
-    var $compnames;
+    public $compnames;
     /**
      * The origin of the packet, if the packet is a server response.
      *
@@ -72,7 +72,7 @@ class Net_DNS_Packet
      * @var string  $answerfrom
      * @access  public
      */
-    var $answerfrom;
+    public $answerfrom;
     /**
      * The size of the answer packet, if the packet is a server response.
      *
@@ -83,7 +83,7 @@ class Net_DNS_Packet
      * @var string  $answersize
      * @access  public
      */
-    var $answersize;
+    public $answersize;
     /**
      * An array of Net_DNS_Question objects
      *
@@ -93,7 +93,7 @@ class Net_DNS_Packet
      * @var array   $question
      * @access  public
      */
-    var $question;
+    public $question;
     /**
      * An array of Net_DNS_RR ANSWER objects
      *
@@ -103,7 +103,7 @@ class Net_DNS_Packet
      * @var array   $answer
      * @access  public
      */
-    var $answer;
+    public $answer;
     /**
      * An array of Net_DNS_RR AUTHORITY objects
      *
@@ -113,7 +113,7 @@ class Net_DNS_Packet
      * @var array   $authority
      * @access  public
      */
-    var $authority;
+    public $authority;
     /**
      * An array of Net_DNS_RR ADDITIONAL objects
      *
@@ -123,7 +123,7 @@ class Net_DNS_Packet
      * @var array   $additional
      * @access  public
      */
-    var $additional;
+    public $additional;
 
     /* }}} */
     /* class constructor - Net_DNS_Packet($debug = FALSE) {{{ */
@@ -140,7 +140,7 @@ class Net_DNS_Packet
      *
      * @param boolean $debug Turns debugging on or off
      */
-    function Net_DNS_Packet($debug = FALSE)
+    public function __construct($debug = FALSE)
     {
         $this->debug = $debug;
         $this->compnames = array();
@@ -437,7 +437,7 @@ class Net_DNS_Packet
                 $offset += $len;
             }
         }
-        $name = ereg_replace('\.$', '', $name);
+        $name = preg_replace('/\.$/', '', $name);
         return(array($name, $offset));
     }
 

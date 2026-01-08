@@ -1,3 +1,99 @@
+ipplan v2026.1.8.2 (visuaFUSION fork)
+
+Jan 8, 2026
+		enhanced: Documentation system restructured for MSP/multi-tenant use
+			- Split documentation into two sections:
+			  - "Using IPplan" - End-user focused documentation
+			  - "System Administration" - Backend/setup documentation
+			- Each section has dedicated FAQ and troubleshooting
+			- Admin docs include new "Planned Enhancements" section
+
+		added: RESTRICT_ADMIN_DOCS configuration option
+			- When TRUE, System Administration docs visible only to
+			  users with "create/modify/delete customers" permission
+			- Enables MSPs to hide backend docs from client users
+			- Static admin account always has full access
+
+		added: Planned Enhancements documentation
+			- Documents planned native LDAP integration
+			- LDAP service account (bind DN) configuration
+			- Auto-provisioning users on first LDAP login
+			- Group synchronization with prefix filtering
+			  (Ent-IPAM-* and Org-* patterns)
+			- Mirrors Drupal LDAP module behavior
+
+		updated: Help menu structure
+			- Organized into "Using IPplan" and "System Administration"
+			- Direct links to key documentation sections
+
+ipplan v2026.1.8.1 (visuaFUSION fork)
+
+Jan 8, 2026
+		added: Integrated help documentation system
+			- New help.php viewer with Markdown rendering
+			- Documentation files in /docs directory
+			- Covers installation, user guide, admin guide, DNS,
+			  import/export, upgrading, FAQ, and troubleshooting
+			- Uses marked.js for client-side Markdown parsing
+			- Updated Help menu with direct links to documentation sections
+			- Replaced external SourceForge links with local help
+
+ipplan v2026.1.7.2 (visuaFUSION fork)
+
+Jan 7, 2026
+		MAJOR: Complete PHP 8.x compatibility overhaul
+			- Updated minimum PHP requirement to 8.0+
+			- Converted all 'var' declarations to 'public' visibility
+			- Converted all old-style constructors to __construct()
+			- Removed deprecated reference parameters from constructors
+			- Fixed undefined variable errors from register_globals removal
+			- Updated error_reporting for PHP 8.x compatibility
+
+		changed: Database driver from mysql/maxsql to mysqli
+			- mysql and maxsql drivers removed in PHP 7+
+			- mysqli driver now required (supports transactions natively)
+			- Updated config.php documentation for driver options
+
+		updated: ADOdb database abstraction library to v5.22.8
+			- Previous version (4.54) from 2004 incompatible with PHP 7+
+
+		fixed: IIS/Windows compatibility issues
+			- Disabled gzip compression (ob_gzhandler) on IIS servers
+			- Fixed base_url() to properly handle Windows path separators
+			- Prevents double-slash URLs that caused ERR_NAME_NOT_RESOLVED
+
+		updated: PHPLayersMenu browser detection
+			- Added detection for Chrome, Firefox, Edge, Safari
+			- Original code (2001-2004) only recognized IE4/5, Netscape 4, Opera 5/6
+
+		updated: Net/DNS library for PHP 8 compatibility
+			- Converted 19 class files to modern PHP syntax
+			- Fixed all constructors and visibility modifiers
+
+		updated: class.smtp.php (PHPMailer) for PHP 8 compatibility
+			- Converted to public visibility and __construct()
+
+		fixed: Multiple undefined variable errors
+			- displaysubnet.php: $ip, $md5str, $lnk, $sendwarningmail
+			- user/admin files: $cust, $admingrp variables
+			- Added null checks for database query results
+
+		fixed: myFetchRow class in displaysubnet.php
+			- Converted to PHP 8 compatible syntax
+			- Added null check in __MoveNext() method
+
+		added: Date-based versioning system (YYYY.M.D.revision)
+			- Replaces old v4.92b versioning
+			- IPPLAN_VERSION constant added to config.php
+			- Version displayed in page footer
+
+		added: Comprehensive README.md documentation
+			- Project history from 2001 to present
+			- Upgrade instructions from v4.92b
+			- Credits for original author Richard Ellerbrock
+
+--------------------------------------------------------------------------------
+
 ipplan v4.92b
 
 Jul 3, 2011

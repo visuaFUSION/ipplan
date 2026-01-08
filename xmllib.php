@@ -22,15 +22,15 @@
 // and values for a given tag. Two levels of nesting are supported in
 // the given tag
 class xml  {
-    var $parser;
-    var $blocktag="";
-    var $gottag=0;
-    var $index=-1;
-    var $result=array();
+    public $parser;
+    public $blocktag="";
+    public $gottag=0;
+    public $index=-1;
+    public $result=array();
 
-    var $depth=0;
+    public $depth=0;
 
-    function xml($blocktag) {
+    public function __construct($blocktag) {
         if(extension_loaded("xml")) {
             $this->blocktag=$blocktag;
             $this->parser = xml_parser_create("");
@@ -137,7 +137,7 @@ class xmlnmap extends xml {
 // replacements currently - all other tags are stripped out. this is 
 // to not require the XSLT php module
 class myTemplate {
-   var $template;
+   public $template;
 
    // reads entire file into a variable
    function get($filename) {

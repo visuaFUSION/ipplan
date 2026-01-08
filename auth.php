@@ -32,15 +32,15 @@ if (defined("AUTH_CAS") && AUTH_CAS==TRUE)
 
     
 class BasicAuthenticator {
-    var $realm = "<private>";
-    var $message;
-    var $authenticated = -1;
-    var $users;
+    public $realm = "<private>";
+    public $message;
+    public $authenticated = -1;
+    public $users;
 
     // not normally required, only for SQL authentication
-    var $grps = FALSE;
-    
-    function BasicAuthenticator($realm, $message = "Access Denied") {
+    public $grps = FALSE;
+
+    public function __construct($realm, $message = "Access Denied") {
         $this->realm = $realm;
         $this->message = $message;
     }
@@ -174,7 +174,7 @@ class SQLAuthenticator extends BasicAuthenticator {
 
     function validate($user, $passwd) {
 
-       $ds = &ADONewConnection(DBF_TYPE);    # create a connection
+       $ds = ADONewConnection(DBF_TYPE);    # create a connection
        if (DBF_PERSISTENT) {
           $ds->PConnect(DBF_HOST, DBF_USER, DBF_PASSWORD, DBF_NAME) or
               die("Could not connect to database");

@@ -25,12 +25,12 @@ require_once(dirname(__FILE__)."/config.php");
 // used for the data export functionality
 // its functions are used by php files that display records
 // and ipplan/user/exportview.php
-class exportForm {	
-   var $xprtRecords;
-   var $rowArray;
-   var $xprtInfo;
+class exportForm {
+   public $xprtRecords;
+   public $rowArray;
+   public $xprtInfo;
    	
-   function exportForm(){
+   public function __construct(){
 	   if (EXPORTENABLED == TRUE)
 	      session_start();
 	   $this->xprtRecords = NULL;

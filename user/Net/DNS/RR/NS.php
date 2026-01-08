@@ -29,17 +29,17 @@
 class Net_DNS_RR_NS extends Net_DNS_RR
 {
     /* class variable defintiions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $nsdname;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $nsdname;
 
     /* }}} */
     /* class constructor - RR(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_NS(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -55,7 +55,7 @@ class Net_DNS_RR_NS extends Net_DNS_RR
                 $this->nsdname = $nsdname;
             }
         } else {
-            $this->nsdname = ereg_replace("[ \t]+(.+)[ \t]*$", '\\1', $data);
+            $this->nsdname = preg_replace("/[ \t]+(.+)[ \t]*$/", '\\1', $data);
         }
     }
 

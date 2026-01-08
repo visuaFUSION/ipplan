@@ -46,6 +46,7 @@ $w=myheading($p, $title, true);
 
 // save the last customer used
 // must set path else Netscape gets confused!
+$cust = isset($_REQUEST['cust']) ? (int)$_REQUEST['cust'] : 0;
 setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
 
 // basic sequence is connect, search, interpret search

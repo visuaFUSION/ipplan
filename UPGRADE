@@ -1,28 +1,73 @@
-ipplan v4.92b
+IPplan Upgrade Instructions
+============================
 
-To upgrade an older version of ipplan to the current version, you need 
-to point your browser to the same admin/install.php file as per the 
-INSTALL file instructions and select the upgrade option, assuming the 
-config.php is setup correctly with connection info to your current db.
+For detailed upgrade instructions, see:
+  Help -> System Administration -> Upgrading
 
-Note if you select 'Upgrade' with 'Run the SQL now', the upgrade will 
-fail with permissions issues.
-
-In order to resolve this behavior, the INSTALL file needs to be
-updated with the following grant info to allow future upgrades [as the
-upgrade portion requires the alter and create permission]:
-
-	GRANT SELECT,INSERT,UPDATE,DELETE,ALTER,CREATE on ipplan.*
-		TO ipplan@localhost IDENTIFIED by 'password';
-
-The added permissions should be removed again after the UPGRADE:
-
-	GRANT SELECT,INSERT,UPDATE,DELETE on ipplan.* 
-       		TO ipplan@localhost IDENTIFIED by 'password';
-
-Please read below for additional upgrade instructions and caveats.
+Or read docs/admin/upgrading.md directly.
 
 
+IMPORTANT: Do Not Reuse Your Old config.php
+-------------------------------------------
+
+Your old config.php file will NOT work with this version. The new version
+includes required configuration options that do not exist in older versions.
+
+You must:
+1. Backup your old config.php
+2. Note your database credentials (DBF_HOST, DBF_USER, DBF_PASSWORD, DBF_NAME)
+3. Note your admin credentials (ADMINUSER, ADMINPASSWD)
+4. Replace ALL files with the new version (do not keep your old config.php)
+5. Edit the NEW config.php and enter your database/admin credentials
+6. Set DBF_TYPE to 'mysqli' (required for PHP 7+)
+
+
+Quick Upgrade Summary
+---------------------
+
+1. BACKUP everything:
+   - Your database: mysqldump -u root -p ipplan > ipplan_backup.sql
+   - Your installation directory: cp -r /var/www/html/ipplan /var/www/html/ipplan.backup
+
+2. RECORD your settings from the old config.php:
+   - DBF_HOST, DBF_USER, DBF_PASSWORD, DBF_NAME
+   - ADMINUSER, ADMINPASSWD
+   - Any other customizations
+
+3. REMOVE old files:
+   - rm -rf /var/www/html/ipplan/*
+
+4. EXTRACT new version:
+   - tar -xzf ipplan-2026.x.x.x.tar.gz -C /var/www/html/ipplan/
+
+5. CONFIGURE the NEW config.php:
+   - Enter your database credentials
+   - Enter your admin credentials
+   - Ensure DBF_TYPE is set to 'mysqli'
+
+6. SET permissions:
+   - chown -R www-data:www-data /var/www/html/ipplan
+   - chmod -R 755 /var/www/html/ipplan
+
+7. TEST:
+   - Log in and verify your data is accessible
+
+
+Common Errors
+-------------
+
+"Your config.php file is inconsistent"
+  -> You are using an old config.php. Use the new one and transfer your credentials.
+
+"Missing file: drivers/adodb-mysql.inc.php"
+  -> Change DBF_TYPE from 'mysql' to 'mysqli' in config.php
+
+
+Legacy Notes (Historical Reference)
+-----------------------------------
+
+The notes below are from previous versions and kept for historical reference.
+For current upgrade instructions, see docs/admin/upgrading.md
 
 Apr 27, 2007
 -  ipplan:	if you intend upgrading MySQL to 5.1, ensure that you upgrade
@@ -57,35 +102,3 @@ Nov 12, 2004
 -  ipplan:	when upgrading make sure to backup your database. Also
 		make sure you make a backup of the config file for
 		reference and also make backups of your templates
-
-Dec 31, 2003
--  ipplan:	when upgrading to a new version, be sure to run the
-		admin/install.php script
-
-Dec 17, 2001
--  ipplan:	when new groups are created the administrator has a new
-		option which can limit which customers the group can see.
-		this may be confusing to some users as their visibility
-		to information may have changed. the default is that all
-		groups see all customers information
-		
-Nov 9, 2001
--  ipplan:	you will need to create a new group for customer creation
-		and add some users to it. customers are not created via the
-		admin user anymore.
-
-Oct 31, 2001
--  ipplan:	the name of the project has changed. you can still keep
-		your existing databases with the same name, just remember
-		to make the necessary changes in the config.php file.
-
-Aug 24, 2001
--  ipplan:	to upgrade I suggest that the existing web tree
-		is deleted, unpack the new version and redo the config.php
-		file
-
-Jul 30, 2001
--  ipplan:	to upgrade you will temporarily need to grant root access
-		to the database while the upgrade is taking place. modify
-		the user and password in the config.php script to do the
-		upgrade.

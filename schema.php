@@ -28,11 +28,8 @@ require_once("class.dbflib.php");
 function CheckSchema() {
 
    // check php version
-   if (phpversion() < "4.1.0") {
-      die("You need php version 4.1.0 or later");
-   }
-   if (phpversion() >= "6") {
-      die("This version of IPplan will not work with PHP 6.x");
+   if (version_compare(PHP_VERSION, '8.0.0', '<')) {
+      die("You need PHP version 8.0.0 or later");
    }
 
    // cant use myError here as we do not have access to layout yet!
@@ -43,8 +40,8 @@ function CheckSchema() {
    }
 
    // check mysql version
-   if (DBF_TYPE=="mysql" or DBF_TYPE=="maxsql") {
-      $result=&$ds->ds->Execute("SELECT version() AS version");
+   if (DBF_TYPE=="mysql" or DBF_TYPE=="maxsql" or DBF_TYPE=="mysqli") {
+      $result=$ds->ds->Execute("SELECT version() AS version");
       $row = $result->FetchRow();
       $version=$row["version"];
 
@@ -55,13 +52,13 @@ function CheckSchema() {
 
    // get schema version
    // schema is reserved word in mssql
-   if (DBF_TYPE=="mssql" or DBF_TYPE=="ado_mssql" or DBF_TYPE=="odbc_mssql" or 
-       DBF_TYPE=='mysql' or DBF_TYPE=='maxsql') {
-      $result=&$ds->ds->Execute("SELECT version
+   if (DBF_TYPE=="mssql" or DBF_TYPE=="ado_mssql" or DBF_TYPE=="odbc_mssql" or
+       DBF_TYPE=='mysql' or DBF_TYPE=='maxsql' or DBF_TYPE=='mysqli') {
+      $result=$ds->ds->Execute("SELECT version
                              FROM version");
    }
    else {
-      $result=&$ds->ds->Execute("SELECT version
+      $result=$ds->ds->Execute("SELECT version
                              FROM schema");
    }
    // could return error if schema table does not exist!

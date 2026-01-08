@@ -29,18 +29,18 @@
 class Net_DNS_RR_HINFO extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $cpu;
-    var $os;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $cpu;
+    public $os;
 
     /* }}} */
     /* class constructor - RR(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_HINFO(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -61,7 +61,7 @@ class Net_DNS_RR_HINFO extends Net_DNS_RR
             $data = str_replace('\\\\', chr(1) . chr(1), $data); /* disguise escaped backslash */
             $data = str_replace('\\"', chr(2) . chr(2), $data); /* disguise \" */
 
-            ereg('("[^"]*"|[^ \t]*)[ \t]+("[^"]*"|[^ \t]*)[ \t]*$', $data, $regs);
+            preg_match('/("[^"]*"|[^ \t]*)[ \t]+("[^"]*"|[^ \t]*)[ \t]*$/', $data, $regs);
             foreach($regs as $idx => $value) {
                 $value = str_replace(chr(2) . chr(2), '\\"', $value);
                 $value = str_replace(chr(1) . chr(1), '\\\\', $value);

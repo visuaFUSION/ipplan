@@ -244,7 +244,7 @@ if ($_POST) {
             if($ds->ds->GetRow("SELECT customer
                         FROM custadd
                         WHERE customer=$cust")) {   // should have FOR UPDATE here!
-                $result = &$ds->ds->Execute("UPDATE custadd
+                $result = $ds->ds->Execute("UPDATE custadd
                         SET info=".$ds->ds->qstr($info)."
                         WHERE customer=$cust");
             // this generates a "duplicate key" error if no update
@@ -253,7 +253,7 @@ if ($_POST) {
         }
             else {
                 if (!empty($info)) {
-                    $result = &$ds->ds->Execute("INSERT INTO custadd
+                    $result = $ds->ds->Execute("INSERT INTO custadd
                             (info, customer)
                             VALUES
                             (".$ds->ds->qstr($info).", $cust)");
@@ -812,7 +812,7 @@ if (!$_POST || $formerror) {
             WHERE customer=$cust");
 
     $rowadd = $result->FetchRow();
-    $dbfinfo=$rowadd["info"];
+    $dbfinfo = ($rowadd !== false && isset($rowadd["info"])) ? $rowadd["info"] : "";
 
     // use base template (for additional subnet information)
     $template=new IPplanIPTemplate("custtemplate", $cust);

@@ -94,6 +94,7 @@ $adminuser=$ds->TestGrpsAdmin($grps);
 
 //capture data for the export view functionality
 $export = new exportForm();
+$template = NULL;  // Template not used for this form
 $export->addRow(array("customer_description", "CRM", "group_name"));
 $export->saveRow();
 

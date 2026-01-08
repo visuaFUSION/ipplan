@@ -32,6 +32,8 @@ $grps=$auth->authenticate();
 
 // save the last customer used
 // must set path else Netscape gets confused!
+$cust = isset($_REQUEST['cust']) ? (int)$_REQUEST['cust'] : 0;
+$admingrp = isset($_REQUEST['admingrp']) ? $_REQUEST['admingrp'] : '';
 setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
 setcookie("ipplanGroup","$admingrp",time() + 10000000, "/");
 
@@ -216,7 +218,7 @@ for ($i=1; $i <= $num; $i++) {
             }
 
             if (!empty($info)) {
-                $result = &$ds->ds->Execute("INSERT INTO baseadd
+                $result = $ds->ds->Execute("INSERT INTO baseadd
                         (info, baseindex)
                         VALUES
                         (".$ds->ds->qstr($info).", $id)");

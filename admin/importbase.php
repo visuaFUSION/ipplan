@@ -71,6 +71,7 @@ $auth->authenticate();
 
 // save the last customer used
 // must set path else Netscape gets confused!
+$cust = isset($_REQUEST['cust']) ? (int)$_REQUEST['cust'] : 0;
 setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
 
 // set language
@@ -222,7 +223,7 @@ while ($data = fgetcsv ($fp, 4098, FIELDS_TERMINATED_BY)) {
                        WHERE baseaddr=$base AND customer=$cust");
 
                // First, try to insert.
-               $result = &$ds->ds->Execute("INSERT INTO baseadd
+               $result = $ds->ds->Execute("INSERT INTO baseadd
                        (info, baseindex)
                        VALUES
                        (".$ds->ds->qstr($info).",
@@ -264,7 +265,7 @@ while ($data = fgetcsv ($fp, 4098, FIELDS_TERMINATED_BY)) {
                // Start of template support for base
                if (!empty($info)) {
                    // First, try to insert.
-                   $result = &$ds->ds->Execute("INSERT INTO baseadd
+                   $result = $ds->ds->Execute("INSERT INTO baseadd
                            (info, baseindex)
                            VALUES
                            (".$ds->ds->qstr($info).",

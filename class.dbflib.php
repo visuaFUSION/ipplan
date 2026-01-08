@@ -32,19 +32,19 @@ define("DBF_API_VER", "1");
 
 class IPplanDbf {
 
-    var $ds;
+    public $ds;
     // default search expression type
-    var $expr="RLIKE";
+    public $expr="RLIKE";
     // default size search - larger than
-    var $size=0;
+    public $size=0;
     // default dhcp search - 1 to search for DHCP subnets only
-    var $dhcp=0;
+    public $dhcp=0;
 
 // open a database connection
-    function IPplanDbf() {
+    public function __construct() {
 
         // create a connection id
-        $this->ds = &ADONewConnection(DBF_TYPE);
+        $this->ds = ADONewConnection(DBF_TYPE);
         $this->ds->debug = DBF_DEBUG;
         // some local locales only accept 24 hour date formats - MSSQL?
         if (DBF_TYPE=="mssql" or DBF_TYPE=="ado_mssql" or DBF_TYPE=="odbc_mssql") {
@@ -142,7 +142,7 @@ class IPplanDbf {
                 FROM ipaddr
                 WHERE baseindex=$baseindex AND
                 ipaddr=$ipaddr")) {   // should have FOR UPDATE here!
-        $result = &$this->ds->Execute("UPDATE ipaddr
+        $result = $this->ds->Execute("UPDATE ipaddr
                 SET userinf=".$this->ds->qstr($user).",
                 location=".$this->ds->qstr($location).",
                 telno=".$this->ds->qstr($telno).",
@@ -155,7 +155,7 @@ class IPplanDbf {
                 ipaddr=$ipaddr");
         }
         else {
-            $result = &$this->ds->Execute("INSERT INTO ipaddr
+            $result = $this->ds->Execute("INSERT INTO ipaddr
                     (userinf, location, telno, macaddr, descrip, hname,
                      baseindex, ipaddr, lastmod, userid)
                     VALUES
@@ -182,7 +182,7 @@ class IPplanDbf {
                 FROM ipaddradd
                 WHERE baseindex=$baseindex AND
                 ipaddr=$ipaddr")) {   // should have FOR UPDATE here!
-            $result = &$this->ds->Execute("UPDATE ipaddradd
+            $result = $this->ds->Execute("UPDATE ipaddradd
                     SET info=".$this->ds->qstr($info)."
                     WHERE baseindex=$baseindex AND
                     ipaddr=$ipaddr");
@@ -192,7 +192,7 @@ class IPplanDbf {
         }
         else {
             if (!empty($info)) {
-                $result = &$this->ds->Execute("INSERT INTO ipaddradd
+                $result = $this->ds->Execute("INSERT INTO ipaddradd
                         (info, baseindex, ipaddr)
                         VALUES
                         (".$this->ds->qstr($info).",
@@ -207,7 +207,7 @@ class IPplanDbf {
 
         $userid = getAuthUsername();
 
-        $result = &$this->ds->Execute("UPDATE ipaddr
+        $result = $this->ds->Execute("UPDATE ipaddr
                            SET $field=".$this->ds->qstr($value).",
                               lastmod=".$this->ds->DBTimeStamp(time()).",
                               userid=".$this->ds->qstr($userid)."
@@ -326,7 +326,7 @@ class IPplanDbf {
         $userid = getAuthUsername();
 
         // no other options defined for baseopt, so always make 1 or 0
-        $result = &$this->ds->Execute("INSERT INTO base
+        $result = $this->ds->Execute("INSERT INTO base
                               (baseaddr, subnetsize, descrip, admingrp,
                                baseopt, customer, userid, lastmod)
                            VALUES
@@ -343,7 +343,7 @@ class IPplanDbf {
         }
         else {
             // emulate getting the last insert_id
-            $result = &$this->ds->Execute("SELECT baseindex 
+            $result = $this->ds->Execute("SELECT baseindex 
                                FROM base
                                WHERE baseaddr=$baseaddr AND customer=$cust");
             $temprow = $result->FetchRow();
@@ -355,7 +355,7 @@ class IPplanDbf {
     function TestCustomerGrp($baseindex, $userid) {
 
         // could use GetRow here
-        $result = &$this->ds->Execute("SELECT customer.admingrp AS admingrp
+        $result = $this->ds->Execute("SELECT customer.admingrp AS admingrp
                             FROM base, customer, usergrp
                             WHERE base.baseindex=$baseindex AND
                                base.customer=customer.customer AND
@@ -374,7 +374,7 @@ class IPplanDbf {
     function TestCustomerCreate($userid) {
 
         // could use GetRow here
-        $result = &$this->ds->Execute("SELECT usergrp.grp
+        $result = $this->ds->Execute("SELECT usergrp.grp
                             FROM usergrp, grp
                             WHERE usergrp.userid=".$this->ds->qstr($userid)." AND
                                usergrp.grp=grp.grp AND
@@ -392,7 +392,7 @@ class IPplanDbf {
     function GetBaseGrp($baseindex) {
 
         // could use GetRow here
-        $result = &$this->ds->Execute("SELECT admingrp
+        $result = $this->ds->Execute("SELECT admingrp
                            FROM base
                            WHERE baseindex=$baseindex");
 
@@ -410,11 +410,11 @@ class IPplanDbf {
 // no need for customer as baseindex makes delete unique!!!
     function DeleteSubnet($baseindex) {
 
-        $result = &$this->ds->Execute("DELETE FROM base
+        $result = $this->ds->Execute("DELETE FROM base
                          WHERE baseindex=$baseindex") and 
-        $result = &$this->ds->Execute("DELETE FROM ipaddr
+        $result = $this->ds->Execute("DELETE FROM ipaddr
                          WHERE baseindex=$baseindex") and
-        $result = &$this->ds->Execute("DELETE FROM baseadd
+        $result = $this->ds->Execute("DELETE FROM baseadd
                          WHERE baseindex=$baseindex");
 
         return $result;
@@ -455,7 +455,7 @@ class IPplanDbf {
 // returns 1 if action allowed (create etc), zero if action not allowed
     function TestBounds($boundsaddr, $boundssize, $grp) {
 
-        $result = &$this->ds->Execute("SELECT count(*) AS cnt
+        $result = $this->ds->Execute("SELECT count(*) AS cnt
                          FROM bounds
                          WHERE grp=".$this->ds->qstr($grp));
         $row = $result->FetchRow();
@@ -464,7 +464,7 @@ class IPplanDbf {
             return 1;
         }
 
-        $result = &$this->ds->Execute("SELECT boundsaddr
+        $result = $this->ds->Execute("SELECT boundsaddr
                                FROM bounds
                                WHERE (($boundsaddr BETWEEN boundsaddr AND 
                                   boundsaddr + boundssize - 1) AND
@@ -915,7 +915,7 @@ class IPplanDbf {
         }
         else {
             $sqllastmod = $this->ds->SQLDate("M d Y H:i:s", 'lastmod');
-            $result = &$this->ds->Execute("SELECT $sqllastmod AS lastmod
+            $result = $this->ds->Execute("SELECT $sqllastmod AS lastmod
                              FROM ipaddr
                              WHERE ipaddr IN($sql) AND baseindex=$baseindex");
 
@@ -1038,21 +1038,21 @@ class IPplanDbf {
 class Base extends IPplanDbf {
 
     // form variables
-    var $cust;
-    var $areaindex;
-    var $rangeindex;
-    var $ipaddr = "";
-    var $searchin = 0;
-    var $descrip = "";
+    public $cust;
+    public $areaindex;
+    public $rangeindex;
+    public $ipaddr = "";
+    public $searchin = 0;
+    public $descrip = "";
     // local class variables
-    var $grps;
-    var $custdescrip = "";
-    var $site = "";
-    var $start;
-    var $end;
-    var $subnetsize = 0;   // used for searching over a netrange - called from findfree
-    var $errstr = "";
-    var $err = 0;
+    public $grps;
+    public $custdescrip = "";
+    public $site = "";
+    public $start;
+    public $end;
+    public $subnetsize = 0;   // used for searching over a netrange - called from findfree
+    public $errstr = "";
+    public $err = 0;
 
     function SetGrps($grps) {
 

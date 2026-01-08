@@ -169,7 +169,7 @@ function NmapScan ($range) {
 
             if ($hostnames) { // remove brackets
                 $myhosts = (preg_split("/[\s,]+/",$line));
-                $ret[$m[1]] = ereg_replace("[()]", "", $myhosts[2]);
+                $ret[$m[1]] = preg_replace("/[()]/", "", $myhosts[2]);
             }
         }
     }

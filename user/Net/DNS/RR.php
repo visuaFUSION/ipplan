@@ -47,13 +47,13 @@ require_once('Net/DNS/RR/AFSDB.php');
 class Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $subclass;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $subclass;
     /* }}} */
 
     /*
@@ -61,7 +61,7 @@ class Net_DNS_RR
      * instead of a parameter list... UGH... i hate perl...
      */
     /* class constructor - Net_DNS_RR($rrdata) {{{ */
-    function Net_DNS_RR($rrdata)
+    public function __construct($rrdata)
     {
         if (is_string($rrdata)) {
             $this->subclass = $this->new_from_string($rrdata);
@@ -100,7 +100,7 @@ class Net_DNS_RR
         $parts = preg_split('/[\s]+/', $rrstring);
         while ($s = array_shift($parts)) {
             if (!isset($name)) {
-                $name = ereg_replace('\.+$', '', $s);
+                $name = preg_replace('/\.+$/', '', $s);
             } else if (preg_match('/^\d+$/', $s)) {
                 $ttl = $s;
             } else if (!isset($rrclass) && ! is_null(Net_DNS::classesbyname(strtoupper($s)))) {

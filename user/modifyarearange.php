@@ -32,6 +32,7 @@ $auth->authenticate();
 
 // save the last customer used
 // must set path else Netscape gets confused!
+$cust = isset($_REQUEST['cust']) ? (int)$_REQUEST['cust'] : 0;
 setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
 
 // set language

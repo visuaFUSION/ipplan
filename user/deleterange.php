@@ -48,6 +48,7 @@ $ds=new IPplanDbf() or myError($w,$p, my_("Could not connect to database"));
 if ($_GET) {
    // save the last customer used
    // must set path else Netscape gets confused!
+   $cust = isset($_REQUEST['cust']) ? (int)$_REQUEST['cust'] : 0;
    setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
 
    // check if user belongs to customer admin group

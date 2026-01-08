@@ -26,7 +26,7 @@ class LayersMenu extends LayersMenuCommon
 * @access private
 * @var string
 */
-var $horizontalMenuTpl;
+public $horizontalMenuTpl;
 /**
 * The template to be used for the first level menu of a vertical menu.
 *
@@ -36,129 +36,129 @@ var $horizontalMenuTpl;
 * @access private
 * @var string
 */
-var $verticalMenuTpl;
+public $verticalMenuTpl;
 /**
 * The template to be used for submenu layers
 * @access private
 * @var string
 */
-var $subMenuTpl;
+public $subMenuTpl;
 
 /**
 * A string containing the header needed to use the menu(s) in the page
 * @access private
 * @var string
 */
-var $header;
+public $header;
 /**
 * This var tells if the header has been made or not
 * @access private
 * @var boolean
 */
-var $_headerHasBeenMade = false;
+public $_headerHasBeenMade = false;
 /**
 * The JS vector to list layers
 * @access private
 * @var string
 */
-var $listl;
+public $listl;
 /**
 * The JS vector of keys to know the father of each layer
 * @access private
 * @var string
 */
-var $father_keys;
+public $father_keys;
 /**
 * The JS vector of vals to know the father of each layer
 * @access private
 * @var string
 */
-var $father_vals;
+public $father_vals;
 /**
 * The JS function to set initial positions of all layers
 * @access private
 * @var string
 */
-var $moveLayers;
+public $moveLayers;
 /**
 * An array containing the code related to the first level menu of each menu
 * @access private
 * @var array
 */
-var $_firstLevelMenu;
+public $_firstLevelMenu;
 /**
 * A string containing the footer needed to use the menu(s) in the page
 * @access private
 * @var string
 */
-var $footer;
+public $footer;
 /**
 * This var tells if the footer has been made or not
 * @access private
 * @var boolean
 */
-var $_footerHasBeenMade = false;
+public $_footerHasBeenMade = false;
 
 /**
 * The image used for forward arrows.
 * @access private
 * @var string
 */
-var $forwardArrowImg;
+public $forwardArrowImg;
 /**
 * The image used for down arrows.
 * @access private
 * @var string
 */
-var $downArrowImg;
+public $downArrowImg;
 /**
 * A 1x1 transparent icon.
 * @access private
 * @var string
 */
-var $transparentIcon;
+public $transparentIcon;
 /**
 * An array to keep trace of layers containing / not containing icons
 * @access private
 * @var array
 */
-var $_hasIcons;
+public $_hasIcons;
 /**
 * Top offset for positioning of sub menu layers
 * @access private
 * @var integer
 */
-var $menuTopShift;
+public $menuTopShift;
 /**
 * Right offset for positioning of sub menu layers
 * @access private
 * @var integer
 */
-var $menuRightShift;
+public $menuRightShift;
 /**
 * Left offset for positioning of sub menu layers
 * @access private
 * @var integer
 */
-var $menuLeftShift;
+public $menuLeftShift;
 /**
 * Threshold for vertical repositioning of a layer
 * @access private
 * @var integer
 */
-var $thresholdY;
+public $thresholdY;
 /**
 * Step for the left boundaries of layers
 * @access private
 * @var integer
 */
-var $abscissaStep;
+public $abscissaStep;
 
 /**
 * The constructor method; it initializates the menu system
 * @return void
 */
-function LayersMenu(
+public function __construct(
 	$menuTopShift = 6,	// Gtk2-like
 	$menuRightShift = 7,	// Gtk2-like
 	$menuLeftShift = 2,	// Gtk2-like
@@ -166,7 +166,7 @@ function LayersMenu(
 	$abscissaStep = 140
 	)
 {
-	$this->LayersMenuCommon();
+	parent::__construct();
 
 	$this->horizontalMenuTpl = $this->tpldir . 'layersmenu-horizontal_menu.ihtml';
 	$this->verticalMenuTpl = $this->tpldir . 'layersmenu-vertical_menu.ihtml';

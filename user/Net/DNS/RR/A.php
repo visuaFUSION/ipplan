@@ -30,16 +30,16 @@
 class Net_DNS_RR_A extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $address;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $address;
     /* }}} */
     /* class constructor - Net_DNS_RR_A(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_A(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -61,7 +61,7 @@ class Net_DNS_RR_A extends Net_DNS_RR
                 $this->address = $addr;
             }
         } else {
-            if (strlen($data) && ereg("([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)[ \t]*$", $data, $regs)) {
+            if (strlen($data) && preg_match("/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)[ \t]*$/", $data, $regs)) {
                 if (($regs[1] >= 0 && $regs[1] <= 255) &&
                         ($regs[2] >= 0 && $regs[2] <= 255) &&
                         ($regs[3] >= 0 && $regs[3] <= 255) &&
@@ -85,7 +85,7 @@ class Net_DNS_RR_A extends Net_DNS_RR
     /* Net_DNS_RR_A::rr_rdata($packet, $offset) {{{ */
     function rr_rdata($packet, $offset)
     {
-        $aparts = split('\.', $this->address);
+        $aparts = explode('.', $this->address);
         if (count($aparts) == 4) {
             return(pack('c4', $aparts[0], $aparts[1], $aparts[2], $aparts[3]));
         }

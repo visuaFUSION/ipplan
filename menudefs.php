@@ -1,7 +1,7 @@
 <?php
 
-// IPplan v4.92b
-// Aug 24, 2001
+// IPplan v2026.1.8.2
+// Originally Aug 24, 2001 - Updated January 2026
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 $ADMIN_MENU=
 ".|".my_("Main")."|$BASE_URL/index.php
-.|".my_("Customers")."
+.|".my_("Customers")."|$BASE_URL/user/displaycustomerform.php
 ..|".my_("Create a New Customer/Autonomous System")."|$BASE_URL/user/modifycustomer.php
 ..|".my_("Edit Existing Customer/Autonomous System")."|$BASE_URL/user/displaycustomerform.php
 .|".my_("Network")."
@@ -32,12 +32,12 @@ $ADMIN_MENU=
 
 if (REGENABLED) {
 $ADMIN_MENU.="
-..|".my_("Registrar")."
+..|".my_("Registrar")."|$BASE_URL/user/displayswipform.php
 ...|".my_("Display Registrar Information")."|$BASE_URL/user/displayswipform.php\n";
 }
 
 $ADMIN_MENU.="
-..|".my_("Subnets")."
+..|".my_("Subnets")."|$BASE_URL/user/displaybaseform.php
 ...|".my_("Create Subnet")."|$BASE_URL/user/createsubnetform.php
 ...|".my_("Create from Routing Table")."|$BASE_URL/user/displayrouterform.php
 ...|".my_("Delete/Edit/Modify/Split/Join Subnet")."|$BASE_URL/user/modifybaseform.php
@@ -61,11 +61,11 @@ $ADMIN_MENU .="
 ..|".my_("Settings")."|$BASE_URL/user/changesettings.php
 ..|".my_("Change my Password")."|$BASE_URL/admin/changepassword.php
 .|".my_("Admin")."
-..|".my_("Users")."
+..|".my_("Users")."|$BASE_URL/admin/usermanager.php
 ...|".my_("Create a new User")."|$BASE_URL/admin/usermanager.php?action=newuserform
 ...|".my_("Add a user to Group")."|$BASE_URL/admin/usermanager.php
 ...|".my_("Display/Edit Users")."|$BASE_URL/admin/usermanager.php
-..|".my_("Groups")."
+..|".my_("Groups")."|$BASE_URL/admin/usermanager.php?action=newgroupform
 ...|".my_("Create a new Group")."|$BASE_URL/admin/usermanager.php?action=newgroupform
 ...|".my_("Add Authority Bounderies to Group")."|$BASE_URL/admin/usermanager.php
 ...|".my_("Display/Modify Authority Boundary Info")."|$BASE_URL/admin/displayboundsform.php
@@ -78,10 +78,23 @@ $ADMIN_MENU .="
 ..|".my_("Maintenance")."|$BASE_URL/admin/maintenance.php
 ..|".my_("Display Audit Log")."|$BASE_URL/admin/displayauditlog.php
 .|".my_("Help")."
-..|".my_("Online Manual")."|http://iptrack.sourceforge.net/ 
-..|".my_("Support Groups")."|http://sourceforge.net/forum/?group_id=32122
-..|".my_("Home Page")."|http://sourceforge.net/projects/iptrack/
+..|".my_("Using IPplan")."|$BASE_URL/help.php?section=user&page=index
+...|".my_("Overview")."|$BASE_URL/help.php?section=user&page=index
+...|".my_("Quick Start")."|$BASE_URL/help.php?section=user&page=getting-started
+...|".my_("Managing Subnets")."|$BASE_URL/help.php?section=user&page=subnets
+...|".my_("IP Addresses")."|$BASE_URL/help.php?section=user&page=ip-addresses
+...|".my_("User FAQ")."|$BASE_URL/help.php?section=user&page=faq
+..|".my_("System Administration")."|$BASE_URL/help.php?section=admin&page=index
+...|".my_("Overview")."|$BASE_URL/help.php?section=admin&page=index
+...|".my_("Installation")."|$BASE_URL/help.php?section=admin&page=installation
+...|".my_("Configuration")."|$BASE_URL/help.php?section=admin&page=configuration
+...|".my_("User Management")."|$BASE_URL/help.php?section=admin&page=user-management
+...|".my_("Planned Enhancements")."|$BASE_URL/help.php?section=admin&page=planned-enhancements
+...|".my_("Admin FAQ")."|$BASE_URL/help.php?section=admin&page=faq
+..|".my_("About")."|$BASE_URL/about.php
+...|".my_("History")."|".PROJECT_INFO_HISTORY."
 ..|".my_("License")."|$BASE_URL/license.php
+..|".my_("Community Discussions")."|".DISCUSSIONS_URL."
 ";
 
 // add menu extensions

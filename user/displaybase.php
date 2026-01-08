@@ -30,6 +30,9 @@ $auth = new SQLAuthenticator(REALM, REALMERROR);
 // And now perform the authentication
 $grps=$auth->authenticate();
 
+// explicitly cast variables as security measure against SQL injection
+list($cust, $areaindex, $rangeindex, $searchin, $ipaddr, $jump, $block, $descrip, $expr, $size, $subnetsize) = myRegister("I:cust I:areaindex I:rangeindex I:searchin S:ipaddr I:jump I:block S:descrip S:expr I:size I:subnetsize");
+
 // save the last customer used
 // must set path else Netscape gets confused!
 setcookie("ipplanCustomer","$cust",time() + 10000000, "/");
@@ -44,9 +47,6 @@ isset($_COOKIE["ipplanLanguage"]) && myLanguage($_COOKIE['ipplanLanguage']);
 $title=my_("Results of your search");
 newhtml($p);
 $w=myheading($p, $title, true);
-
-// explicitly cast variables as security measure against SQL injection
-list($cust, $areaindex, $rangeindex, $searchin, $ipaddr, $jump, $block, $descrip, $expr, $size, $subnetsize) = myRegister("I:cust I:areaindex I:rangeindex I:searchin S:ipaddr I:jump I:block S:descrip S:expr I:size I:subnetsize");
 
 if (!$_GET) {
    myError($w,$p, my_("You cannot reload or bookmark this page!"));

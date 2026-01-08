@@ -32,25 +32,25 @@ define('NET_DNS_DEFAULT_FUDGE', 300);
 class Net_DNS_RR_TSIG extends Net_DNS_RR
 {
     /* class variable definitions {{{ */
-    var $name;
-    var $type;
-    var $class;
-    var $ttl;
-    var $rdlength;
-    var $rdata;
-    var $time_signed;
-    var $fudge;
-    var $mac_size;
-    var $mac;
-    var $original_id;
-    var $error;
-    var $other_len;
-    var $other_data;
-    var $key;
+    public $name;
+    public $type;
+    public $class;
+    public $ttl;
+    public $rdlength;
+    public $rdata;
+    public $time_signed;
+    public $fudge;
+    public $mac_size;
+    public $mac;
+    public $original_id;
+    public $error;
+    public $other_len;
+    public $other_data;
+    public $key;
 
     /* }}} */
     /* class constructor - RR(&$rro, $data, $offset = '') {{{ */
-    function Net_DNS_RR_TSIG(&$rro, $data, $offset = '')
+    public function __construct($rro, $data, $offset = '')
     {
         $this->name = $rro->name;
         $this->type = $rro->type;
@@ -145,7 +145,7 @@ class Net_DNS_RR_TSIG extends Net_DNS_RR
 
         if (strlen($this->key)) {
             $key = $this->key;
-            $key = ereg_replace(' ', '', $key);
+            $key = str_replace(' ', '', $key);
             $key = base64_decode($key);
 
             $newpacket = $packet;

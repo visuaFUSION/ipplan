@@ -31,37 +31,37 @@ class Template_PHPLIB
      * If set, echo assignments
      * @var bool
      */
-    var $debug     = false;
+    public $debug     = false;
 
     /**
      * $file[handle] = "filename";
      * @var array
      */
-    var $file  = array();
+    public $file  = array();
 
     /**
      * fallback paths that should be defined in a child class
      * @var array
      */
-    var $file_fallbacks = array();
+    public $file_fallbacks = array();
 
     /**
      * Relative filenames are relative to this pathname
      * @var string
      */
-    var $root   = "";
+    public $root   = "";
 
     /*
      * $_varKeys[key] = "key"
      * @var array
      */
-    var $_varKeys = array();
+    public $_varKeys = array();
     
     /**
      * $_varVals[key] = "value";
      * @var array
      */
-    var $_varVals = array();
+    public $_varVals = array();
 
     /**
      * "remove"  => remove undefined variables
@@ -69,20 +69,20 @@ class Template_PHPLIB
      * "keep"    => keep undefined variables
      * @var string
      */
-    var $unknowns = "remove";
+    public $unknowns = "remove";
   
     /**
      * "yes" => halt, "report" => report error, continue, "no" => ignore error quietly
      * @var string
      */
-    var $haltOnError  = "report";
+    public $haltOnError  = "report";
   
     /**
      * The last error message is retained here
      * @var string
      * @see halt
      */
-    var $_lastError     = "";
+    public $_lastError     = "";
 
 
     /**
@@ -93,7 +93,7 @@ class Template_PHPLIB
      * @param  string how to handle unknown variables
      * @param  array fallback paths
      */
-    function Template_PHPLIB($root = ".", $unknowns = "remove", $fallback="")
+    public function __construct($root = ".", $unknowns = "remove", $fallback="")
     {
         $this->setRoot($root);
         $this->setUnknowns($unknowns);
@@ -164,9 +164,9 @@ class Template_PHPLIB
             $this->file[$handle] = $this->_filename($filename);
       
         } else {
-    
+
             reset($handle);
-            while (list($h, $f) = each($handle)) {
+            foreach($handle as $h => $f) {
                 $this->file[$h] = $this->_filename($f);
             }
         }
@@ -234,7 +234,7 @@ class Template_PHPLIB
         } else {
             reset($varname);
 
-            while (list($k, $v) = each($varname)) {
+            foreach($varname as $k => $v) {
                 if (!empty($k))
                     if ($this->debug) print "array: set *$k* to *$v*<br>\n";
 
@@ -297,7 +297,7 @@ class Template_PHPLIB
         } else {
             reset($handle);
 
-            while (list(, $h) = each($handle)) {
+            foreach($handle as $h) {
                 $str = $this->subst($h);
                 $this->setVar($target, $str);
             }
@@ -332,7 +332,7 @@ class Template_PHPLIB
     {
         reset($this->_varKeys);
 
-        while (list($k, ) = each($this->_varKeys)) {
+        foreach(array_keys($this->_varKeys) as $k) {
             $result[$k] = $this->getVar($k);
         }
 
@@ -356,8 +356,8 @@ class Template_PHPLIB
             }
         } else {
             reset($varname);
-    
-            while (list($k, ) = each($varname)) {
+
+            foreach(array_keys($varname) as $k) {
                 $result[$k] = (isset($this->_varVals[$k])) ? $this->_varVals[$k] : "";
             }
 
@@ -386,7 +386,7 @@ class Template_PHPLIB
         }
 
         reset($m);
-        while (list(, $v) = each($m)) {
+        foreach($m as $v) {
             if (!isset($this->_varKeys[$v])) {
                 $result[$v] = $v;
             }
@@ -462,7 +462,7 @@ class Template_PHPLIB
         if (file_exists($filename)) return $filename;
         if (is_array($this->file_fallbacks) && count($this->file_fallbacks) > 0) {
             reset($this->file_fallbacks);
-            while (list(,$v) = each($this->file_fallbacks)) {
+            foreach($this->file_fallbacks as $v) {
                 if (file_exists($v.basename($filename))) return $v.basename($filename);
             }
             $this->halt(sprintf("filename: file %s does not exist in the fallback paths %s.",$filename,implode(",",$this->file_fallbacks)));

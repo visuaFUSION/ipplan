@@ -77,14 +77,14 @@ class Net_DNS
      *
      * @var object Net_DNS_Resolver
      */
-    var $resolver;
-    var $VERSION = '1.00b2'; // This should probably be a define :(
-    var $PACKETSZ = 512;
-    var $HFIXEDSZ = 12;
-    var $QFIXEDSZ = 4;
-    var $RRFIXEDSZ = 10;
-    var $INT32SZ = 4;
-    var $INT16SZ = 2;
+    public $resolver;
+    public $VERSION = '1.00b2'; // This should probably be a define :(
+    public $PACKETSZ = 512;
+    public $HFIXEDSZ = 12;
+    public $QFIXEDSZ = 4;
+    public $RRFIXEDSZ = 10;
+    public $INT32SZ = 4;
+    public $INT16SZ = 2;
     
     /* }}} */
     /* class constructor - Net_DNS() {{{ */
@@ -93,7 +93,7 @@ class Net_DNS
      *
      * @see Net_DNS_Resolver
      */
-    function Net_DNS()
+    public function __construct()
     {
         $this->resolver = new Net_DNS_Resolver();
     }

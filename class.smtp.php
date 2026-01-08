@@ -27,26 +27,26 @@ class SMTP
      *  SMTP server port
      *  @var int
      */
-    var $SMTP_PORT = 25;
-    
+    public $SMTP_PORT = 25;
+
     /**
      *  SMTP reply line ending
      *  @var string
      */
-    var $CRLF = "\r\n";
-    
+    public $CRLF = "\r\n";
+
     /**
      *  Sets whether debugging is turned on
      *  @var bool
      */
-    var $do_debug;       # the level of debug to perform
+    public $do_debug;       # the level of debug to perform
 
     /**#@+
      * @access private
      */
-    var $smtp_conn;      # the socket to the server
-    var $error;          # error if any on the last call
-    var $helo_rply;      # the reply the server sent to us for HELO
+    public $smtp_conn;      # the socket to the server
+    public $error;          # error if any on the last call
+    public $helo_rply;      # the reply the server sent to us for HELO
     /**#@-*/
 
     /**
@@ -54,7 +54,7 @@ class SMTP
      * @access public
      * @return void
      */
-    function SMTP() {
+    public function __construct() {
         $this->smtp_conn = 0;
         $this->error = null;
         $this->helo_rply = null;
@@ -323,7 +323,7 @@ class SMTP
 
         $max_line_length = 998; # used below; set here for ease in change
 
-        while(list(,$line) = @each($lines)) {
+        foreach($lines as $line) {
             $lines_out = null;
             if($line == "" && $in_headers) {
                 $in_headers = false;
@@ -350,7 +350,7 @@ class SMTP
             $lines_out[] = $line;
 
             # now send the lines to the server
-            while(list(,$line_out) = @each($lines_out)) {
+            foreach($lines_out as $line_out) {
                 if(strlen($line_out) > 0)
                 {
                     if(substr($line_out, 0, 1) == ".") {
@@ -434,7 +434,7 @@ class SMTP
 
         # parse the reply and place in our array to return to user
         $entries = explode($this->CRLF,$rply);
-        while(list(,$l) = @each($entries)) {
+        foreach($entries as $l) {
             $list[] = substr($l,4);
         }
 

@@ -45,10 +45,37 @@ Your browser must be JavaScript capable to use this application. Please turn Jav
 "));
 
 $w=myheading($p,my_("Main Menu"));
-insert($w,block(my_("IPplan is a free (GPL), web based, multilingual, IP address management and tracking tool written in php 4, ".
-	"simplifying the administration of your IP address space. IPplan goes beyond IP address management including DNS administration, ".
-	"configuration file management, circuit management (customizable via templates) and storing of hardware information ".
-	"(customizable via templates). IPplan can handle a single network or cater for multiple networks and customers with overlapping address space."))); 
+
+// Load main menu content from markdown file
+$mainMenuMdPath = __DIR__ . '/docs/main-menu.md';
+if (file_exists($mainMenuMdPath)) {
+    $markdownContent = file_get_contents($mainMenuMdPath);
+    $markdownJson = json_encode($markdownContent);
+
+    // Add marked.js and render the markdown content
+    $mainMenuHtml = <<<HTML
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<div id="main-menu-content" class="main-menu-content"></div>
+<script>
+(function() {
+    var markdown = {$markdownJson};
+    if (typeof marked !== "undefined") {
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+        document.getElementById("main-menu-content").innerHTML = marked.parse(markdown);
+    } else {
+        document.getElementById("main-menu-content").innerHTML = "<pre>" + markdown + "</pre>";
+    }
+})();
+</script>
+HTML;
+    insert($w, block($mainMenuHtml));
+} else {
+    // Fallback if markdown file doesn't exist
+    insert($w, block("<p>".my_("Welcome to IPplan - IP Address Management")."</p>"));
+}
 
 printhtml($p);
 ?> 

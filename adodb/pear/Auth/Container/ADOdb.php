@@ -1,42 +1,36 @@
 <?php
-//
-// +----------------------------------------------------------------------+
-// | PHP Version 4                                                        |
-// +----------------------------------------------------------------------+
-// |                                                                      |
-// +----------------------------------------------------------------------+
-// | This source file is subject to version 2.02 of the PHP license,      |
-// | that is bundled with this package in the file LICENSE, and is        |
-// | available at through the world-wide-web at                           |
-// | http://www.php.net/license/2_02.txt.                                 |
-// | If you did not receive a copy of the PHP license and are unable to   |
-// | obtain it through the world-wide-web, please send a note to          |
-// | license@php.net so we can mail you a copy immediately.               |
-// +----------------------------------------------------------------------+
-// | Authors: Martin Jansen <mj@php.net>
-// |	Richard Tango-Lowy <richtl@arscognita.com>                                  |
-// +----------------------------------------------------------------------+
-//
-// $Id: ADOdb.php,v 1.1.1.1 2005/01/08 02:25:47 richarde Exp $
-//
+/**
+ * Storage driver for fetching login data from a database using ADOdb-PHP.
+ *
+ * This storage driver can use all databases which are supported by the ADBdb
+ * abstraction layer to fetch login data.
+ * NOTE: The ADOdb directory MUST be in your PHP include_path!
+ *
+ * This file is part of ADOdb, a Database Abstraction Layer library for PHP.
+ *
+ * @package ADOdb
+ * @link https://adodb.org Project's web site and documentation
+ * @link https://github.com/ADOdb/ADOdb Source code and issue tracker
+ *
+ * The ADOdb Library is dual-licensed, released under both the BSD 3-Clause
+ * and the GNU Lesser General Public Licence (LGPL) v2.1 or, at your option,
+ * any later version. This means you can use it in proprietary products.
+ * See the LICENSE.md file distributed with this source code for details.
+ * @license BSD-3-Clause
+ * @license LGPL-2.1-or-later
+ *
+ * @copyright 2000-2013 John Lim
+ * @copyright 2014 Damien Regad, Mark Newnham and the ADOdb community
+ * @author Martin Jansen <mj@php.net>
+ * @author Richard Tango-Lowy <richtl@arscognita.com>
+ */
 
 require_once 'Auth/Container.php';
 require_once 'adodb.inc.php';
 require_once 'adodb-pear.inc.php';
 require_once 'adodb-errorpear.inc.php';
 
-/**
- * Storage driver for fetching login data from a database using ADOdb-PHP.
- *
- * This storage driver can use all databases which are supported
- * by the ADBdb DB abstraction layer to fetch login data.
- * See http://php.weblogs.com/adodb for information on ADOdb.
- * NOTE: The ADOdb directory MUST be in your PHP include_path!
- *
- * @author   Richard Tango-Lowy <richtl@arscognita.com>
- * @package  Auth
- * @version  $Revision: 1.1.1.1 $
- */
+
 class Auth_Container_ADOdb extends Auth_Container
 {
 
@@ -52,7 +46,7 @@ class Auth_Container_ADOdb extends Auth_Container
      */
     var $db = null;
     var $dsn = '';
-	
+
     /**
      * User that is currently selected from the DB.
      * @var string
@@ -64,15 +58,15 @@ class Auth_Container_ADOdb extends Auth_Container
     /**
      * Constructor of the container class
      *
-     * Initate connection to the database via PEAR::ADOdb
+     * Initiate connection to the database via PEAR::ADOdb
      *
      * @param  string Connection data or DB object
      * @return object Returns an error object if something went wrong
      */
-    function Auth_Container_ADOdb($dsn)
+    function __construct($dsn)
     {
         $this->_setDefaults();
-		
+
         if (is_array($dsn)) {
             $this->_parseOptions($dsn);
 
@@ -82,7 +76,6 @@ class Auth_Container_ADOdb extends Auth_Container
         } else {
         	// Extract db_type from dsn string.
             $this->options['dsn'] = $dsn;
-            $this->_parseDsn( $dsn );
         }
     }
 
@@ -100,22 +93,12 @@ class Auth_Container_ADOdb extends Auth_Container
     {
         if (is_string($dsn) || is_array($dsn)) {
         	if(!$this->db) {
-	        	$this->db = &ADONewConnection($this->options['db_type']);
-	    		
+	        	$this->db = ADONewConnection($dsn);
 	    		if( $err = ADODB_Pear_error() ) {
 	   	    		return PEAR::raiseError($err);
 	    		}
         	}
-        	
-        	$dbconnected = $this->db->Connect( 
-        		$this->options['db_host'],
-        		$this->options['db_user'],
-        		$this->options['db_pass'],
-        		$this->options['db_name'] );
-        	if( !$dbconnected ) {
-        		PEAR::raiseError('Unable to connect to database' );
-        	}
-        	
+
         } else {
             return PEAR::raiseError('The given dsn was not valid in file ' . __FILE__ . ' at line ' . __LINE__,
                                     41,
@@ -124,7 +107,7 @@ class Auth_Container_ADOdb extends Auth_Container
                                     null
                                     );
         }
-        
+
         if(!$this->db) {
         	return PEAR::raiseError(ADODB_Pear_error());
         } else {
@@ -147,7 +130,7 @@ class Auth_Container_ADOdb extends Auth_Container
     function _prepare()
     {
     	if(!$this->db) {
-    		$res = $this->_connect($this->options['dsn']);  		
+    		$res = $this->_connect($this->options['dsn']);
     	}
         return true;
     }
@@ -216,7 +199,7 @@ class Auth_Container_ADOdb extends Auth_Container
         /* Include additional fields if they exist */
         if(!empty($this->options['db_fields'])){
             if(is_array($this->options['db_fields'])){
-                $this->options['db_fields'] = join($this->options['db_fields'], ', ');
+                $this->options['db_fields'] = join(', ', $this->options['db_fields']);
             }
             $this->options['db_fields'] = ', '.$this->options['db_fields'];
         }
@@ -253,11 +236,11 @@ class Auth_Container_ADOdb extends Auth_Container
         else{
             $sql_from = $this->options['usernamecol'] . ", ".$this->options['passwordcol'].$this->options['db_fields'];
         }
-        
+
         $query = "SELECT ".$sql_from.
                 " FROM ".$this->options['table'].
                 " WHERE ".$this->options['usernamecol']." = " . $this->db->Quote($username);
-        
+
         $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
         $rset = $this->db->Execute( $query );
         $res = $rset->fetchRow();
@@ -279,7 +262,7 @@ class Auth_Container_ADOdb extends Auth_Container
                     continue;
                 }
                 // Use reference to the auth object if exists
-                // This is because the auth session variable can change so a static call to setAuthData does not make sence
+                // This is because the auth session variable can change so a static call to setAuthData does not make sense
                 if(is_object($this->_auth_obj)){
                     $this->_auth_obj->setAuthData($key, $value);
                 } else {
@@ -410,27 +393,14 @@ class Auth_Container_ADOdb extends Auth_Container
     }
 
     // }}}
-
-	function _parseDsn( $dsn ) 
-	{
-		if( is_string( $dsn )) {
-			preg_match( '/^(\w*):\/\/(\w*)(:(\w*))?@(\w*)\/(\w*)$/', $dsn, $match );
-			
-			$this->options['db_type'] = $match[1];
-			$this->options['db_user'] = $match[2];
-			$this->options['db_pass'] = $match[3];
-			$this->options['db_host'] = $match[5];
-			$this->options['db_name'] = $match[6];
-		}	
-	}
 }
 
 function showDbg( $string ) {
-	print "<P>$string</P>";
+	print "
+-- $string</P>";
 }
 function dump( $var, $str, $vardump = false ) {
 	print "<H4>$str</H4><pre>";
 	( !$vardump ) ? ( print_r( $var )) : ( var_dump( $var ));
 	print "</pre>";
 }
-?>

@@ -29,9 +29,9 @@ class IPplanIPTemplate {
     // $userfld["field1"]["errmsg"]
     // $userfld["field1"]["value"]      - only defined once template is merged
 
-    var $userfld = array();
-    var $error = FALSE;
-    var $errmsg = "";
+    public $userfld = array();
+    public $error = FALSE;
+    public $errmsg = "";
 
     // which template do I use? create a template in the format: 
     //      iptemplate.xml
@@ -72,7 +72,7 @@ class IPplanIPTemplate {
         return FALSE;
     }
 
-    function IPplanIPTemplate($name, $cust=0, $netaddr=FALSE) {
+    public function __construct($name, $cust=0, $netaddr=FALSE) {
 
         $filename=$this->__findtemp($name, $cust, $netaddr);
         if ($filename==FALSE) {
