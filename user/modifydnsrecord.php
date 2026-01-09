@@ -524,17 +524,33 @@ if ($domain) {
 
 }
 
+// Get dynamic rows per page value
+$rowsPerPage = getRowsPerPage();
+
+// Count total records for pagination display
+$totalRecords = 0;
+$countResult = $ds->ds->Execute("SELECT COUNT(*) as cnt FROM fwdzonerec
+    WHERE data_id = (SELECT data_id FROM fwdzone WHERE customer=$cust AND domain=".$ds->ds->qstr($domain).")");
+if ($countRow = $countResult->FetchRow()) {
+    $totalRecords = (int)$countRow['cnt'];
+}
+
+// Build base params for pagination links
+$paginationParams = "&domain=".urlencode($domain)."&cust=".$cust."&expr=$expr&descrip=".urlencode($descrip);
+
 $totcnt=0;
 $vars="";
 // fastforward till first record if not first block of data
-while ($block and $totcnt < $block*MAXTABLESIZE and
+while ($block and $totcnt < $block*$rowsPerPage and
        $row = $result->FetchRow()) {
-    $vars=DisplayBlock($w, $row, $totcnt, "&domain=".urlencode($domain)."&cust=".$cust.
-            "&expr=$expr&descrip=".urlencode($descrip), "sortorder");
     $totcnt++;
 }
-insert($w,block("<p>"));
-insert($w,textb($domain));
+
+// Header row with domain name (left) and rows per page dropdown (right)
+displayListHeader($w, htmlspecialchars($domain));
+
+// Display record-count based pagination at top
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
 
 insert($w, $f = form(array("name"=>"deleterecords",
                            "method"=>"post",
@@ -546,8 +562,6 @@ insert($f,$t = table(array("cols"=>"7",
 // draw heading
 setdefault("cell",array("class"=>"heading"));
 insert($t,$c = cell());
-if (!empty($vars))
-    insert($c,anchor($vars, "<<"));
 insert($c,text(my_("Sort-Order")));
 insert($t,$c = cell());
 insert($c,text(my_("Host")));
@@ -559,8 +573,8 @@ insert($t,$c = cell());
 insert($c,text(my_("Last modified")));
 insert($t,$c = cell());
 insert($c,text(my_("Changed by")));
-insert($t,$ck = cell());
-insert($ck,text(my_("Action")));
+insert($t,$c = cell());
+insert($c,text(my_("Action")));
 
 //capture data for the export view functionality
 $export = new exportForm();
@@ -636,7 +650,7 @@ setdefault("cell",array("class"=>color_flip_flop()));
                 "&iphostname=".urlencode($row["ip_hostname"]), my_("Edit Record")));
     insert($c,block("</small>"));
 
-    if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1)
+    if ($totcnt % $rowsPerPage == $rowsPerPage-1)
         break;
     $cnt++;
     $totcnt++;
@@ -680,29 +694,29 @@ function checkAll(val) {
    insert($f,submit(array("value"=>my_("Delete multiple"))));
 }
 
-$vars="";
-$printed=0;
+// Skip remaining records (for accurate total count we already have it)
 while ($row = $result->FetchRow()) {
     $totcnt++;
-    $vars=DisplayBlock($w, $row, $totcnt, "&domain=".urlencode($domain)."&cust=".$cust.
-            "&expr=$expr&descrip=".urlencode($descrip), "sortorder" );
-    if (!empty($vars) and !$printed) {
-        insert($ck,anchor($vars, ">>"));
-        $printed=1;
-    }
 }
 
+// Display record-count based pagination at bottom
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
+
+// Bottom footer with Add Host button and rows per page dropdown
+$footerLeftContent = '';
 if ($domain) {
-   insert($w, $f = form(array("method"=>"post", "action"=>"modifydnsrecordform.php?cust=$cust&action=add&domain=".urlencode($domain)."&zoneid=".$zoneid)));
-   insert($f,submit(array("value"=>my_("Add a Host"))));
+    $footerLeftContent = '<form method="post" action="modifydnsrecordform.php?cust=' . $cust . '&action=add&domain=' . urlencode($domain) . '&zoneid=' . $zoneid . '" style="display: inline; margin: 0;">';
+    $footerLeftContent .= '<input type="submit" value="' . my_("Add a Host") . '">';
+    $footerLeftContent .= '</form>';
 }
+displayListFooter($w, $footerLeftContent);
 
 if (!$cnt) {
    myError($w,$p, my_("No Records found.  Please choose a domain and try again."));
 }
 // if there are some records, give option to renumber
 else {
-    insert($f,anchor($_SERVER["PHP_SELF"]."?cust=$cust&action=renumber&domain=".urlencode($domain)."&block=$block", my_("Renumber SortOrder"),
+    insert($w,anchor($_SERVER["PHP_SELF"]."?cust=$cust&action=renumber&domain=".urlencode($domain)."&block=$block", my_("Renumber SortOrder"),
                 $ipplanParanoid ? array("onclick"=>"return confirm('".my_("Are you sure?")."')") : FALSE));
 }
    

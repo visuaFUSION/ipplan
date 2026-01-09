@@ -476,6 +476,8 @@ function checkAll(val) {
 }
 
 if (!$cnt) {
+   insert($w,anchor("displaybaseform.php?cust=$cust", my_("Back to search form")));
+   insert($w,block("<p>"));
    myError($w,$p, my_("Search found no matching entries"));
 }
 

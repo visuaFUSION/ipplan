@@ -1,7 +1,8 @@
 <?php
 
-// IPplan v4.92b
-// Aug 24, 2001
+// IPplan - Configuration File
+// Originally v4.92b (Aug 24, 2001)
+// Current version defined in ipplanlib.php as IPPLAN_VERSION
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +21,8 @@
 
 // NOTE: DO NOT REMOVE ANY LINES FROM THIS FILE
 
-// Version format: YYYY.M.D.revision (e.g., 2025.1.7.1 = first release on Jan 7, 2025)
-define("IPPLAN_VERSION", "2026.1.8.2");
+// NOTE: IPPLAN_VERSION is now defined in ipplanlib.php (not here)
+// This ensures version displays correctly regardless of config.php caching
 
 // define some global variables for database connections
 // For MySQL: use 'mysqli' (supports transactions, required for PHP 7+)
@@ -82,9 +83,11 @@ define("VIEWEXPORTPATH", "/tmp/export/");
 define("FIELDS_TERMINATED_BY", "\t");
 //define("FIELDS_TERMINATED_BY", ";");
 
-// maximum number of lines per table - this must be a power of 2!
-// eq 64, 128, 256, 512, 1024 etc
-// don't make this too large else you will get URI too large errors
+// Default number of rows per page in list views (table displays)
+// This value can be overridden per-user in Display Settings
+// Valid values are powers of 2: 64, 128, 256, 512
+// Don't make this too large or you may encounter URI too large errors
+// or slow page load times
 define("MAXTABLESIZE", 128);
 
 // maximum number of bytes allowed to upload via import functions,
@@ -256,13 +259,33 @@ $iso_codes = array (
 define("LANGCHOICE", TRUE);
 //-------------------------START THEME CHOOSER-------------------------
 
-// Each line defines an available theme and gives it a name.
+// Force all users to use classic theme (admin override)
+// Set to TRUE to disable the Current Branch themes and force classic look
+define("FORCE_CLASSIC_THEME", FALSE);
 
+// Default theme for new users/when no cookie is set
+// Options: 'classic', 'current-branch-dark', 'current-branch-light', 'red-grey', 'pastel', 'penguin'
+define("DEFAULT_THEME", 'current-branch-dark');
+
+// Each line defines an available theme and gives it a name.
+// Themes starting with 'current-branch-' use the new sidebar layout
+// Note: Legacy 2026-* cookie values are auto-converted by getCurrentTheme()
 $config_themes = array (
-    "Red Grey" => "red_grey.css",
-    "Classic" => "default.css",
-    "Pastel"  => "pastel.css",
-    "Penguin" => "penguin.css");
+    "current-branch-dark"  => "current-branch-dark.css",
+    "current-branch-light" => "current-branch-light.css",
+    "classic"              => "default.css",
+    "red-grey"             => "red_grey.css",
+    "pastel"               => "pastel.css",
+    "penguin"              => "penguin.css");
+
+// Display names for themes (shown in settings dropdown)
+$config_theme_names = array (
+    "current-branch-dark"  => "Current Branch - Dark",
+    "current-branch-light" => "Current Branch - Light",
+    "classic"              => "Classic",
+    "red-grey"             => "Red Grey",
+    "pastel"               => "Pastel",
+    "penguin"              => "Penguin");
 
 
 //-------------------------START OF AUTHENTICATION----------------------

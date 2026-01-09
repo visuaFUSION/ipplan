@@ -50,7 +50,7 @@ Your browser must be JavaScript capable to use this application. Please turn Jav
 $w=myheading($p, my_("Install/Upgrade IPPlan"), false);
 insert($w, $t=container("div"));
 
-insert($t, heading(3, my_("IPplan v4.92b Installation System")));
+insert($t, heading(3, my_("IPplan Installation System") . " v" . IPPLAN_VERSION));
 
 // BEGIN INSTALLER LANGUAGE SUPPORT
 if(extension_loaded("gettext") and LANGCHOICE) {

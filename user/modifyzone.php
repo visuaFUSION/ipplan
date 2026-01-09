@@ -562,6 +562,8 @@ if ($cnt) {
                 $ipplanParanoid ? array("onclick"=>"return confirm('".my_("Are you sure to Export?")."')") : FALSE));
 }
 else {
+    insert($w,anchor("modifyzoneform.php?cust=$cust", my_("Back to search form")));
+    insert($w,block("<p>"));
     myError($w,$p, my_("Search found no Zone entries")."\n", FALSE);
 }
 

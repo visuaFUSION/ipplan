@@ -162,9 +162,11 @@ while($row = $result->FetchRow()) {
     //$arr[$maxcnt-1]["descrip"].=inet_ntoa($prevbase)." ".$prevsize;
 }
 // Why is the previous result read into an array?
-$result->Close(); // save up some memory - won't help much. 
+$result->Close(); // save up some memory - won't help much.
 
 if (!$maxcnt) {
+    insert($w,anchor("findfreeform.php?cust=$cust", my_("Back to search form")));
+    insert($w,block("<p>"));
     myError($w,$p, my_("Search found no matching entries"));
 }
 

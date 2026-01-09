@@ -1,3 +1,25 @@
+ipplan v2026.1.9.4 (visuaFUSION fork)
+
+Jan 9, 2026
+		added: Custom Branding documentation for theme-override system
+			- Explains how to add custom logos via theme-override/images/
+			- Documents theme selection options
+			- Covers logo specifications and troubleshooting
+
+		added: 2026 Light theme
+			- Complete light theme with proper CSS variables
+			- Light color palette with cyan accents
+			- Fixes missing theme file issue
+
+		enhanced: Upgrade documentation with terminology improvements
+			- Distinguishes "Upgrade" (4.92b → Current Branch) from "Update" (version-to-version)
+			- Added "Current Branch" terminology (replaces informal "Modern" references)
+			- Added updating section for Current Branch version updates
+
+		changed: Version to 2026.1.9.4
+
+--------------------------------------------------------------------------------
+
 ipplan v2026.1.8.2 (visuaFUSION fork)
 
 Jan 8, 2026

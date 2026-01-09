@@ -113,18 +113,27 @@ $srch->expr=$expr;
 $srch->expr_disp=TRUE;
 $srch->Search();  // draw the sucker!
 
+// Get dynamic rows per page value
+$rowsPerPage = getRowsPerPage();
+
+// Count total records for pagination display
+$totalRecords = $result->PO_RecordCount("baseaddr");
+
+// Build base params for pagination links
+$paginationParams = "&cust=$cust&areaindex=$areaindex&rangeindex=$rangeindex&ipaddr=$ipaddr&expr=$expr&size=$size&descrip=".urlencode($descrip);
+
 $totcnt=0;
-$vars="";
 // fastforward till first record if not first block of data
-while ($block and $totcnt < $block*MAXTABLESIZE and
+while ($block and $totcnt < $block*$rowsPerPage and
        $row = $result->FetchRow()) {
-    $vars=DisplayBlock($w, $row, $totcnt, 
-                        "&cust=$cust&areaindex=$areaindex".
-                        "&rangeindex=$rangeindex&ipaddr=$ipaddr&expr=$expr&size=$size".
-                        "&descrip=".urlencode($descrip));
     $totcnt++;
 }
-insert($w,block("<p>"));
+
+// Header row with title (left) and rows per page dropdown (right)
+displayListHeader($w, my_("Subnets"));
+
+// Display record-count based pagination at top
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
 
 // create a table
 if (REGENABLED) {
@@ -139,8 +148,6 @@ else {
 // draw heading
 setdefault("cell",array("class"=>"heading"));
 insert($t,$c = cell());
-if (!empty($vars))
-    insert($c,anchor($vars, "<<"));
 insert($c,text(my_("Base address")));
 insert($t,$c = cell());
 insert($c,text(my_("Subnet size")));
@@ -226,29 +233,28 @@ setdefault("cell",array("class"=>color_flip_flop()));
     $export->addCell($row["swipmod"]);
     $export->saveRow();
     
-    if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1)
+    if ($totcnt % $rowsPerPage == $rowsPerPage-1)
        break;
     $cnt++;
     $totcnt++;
 }
-insert($w,block("<p>"));
+// Skip remaining records (we already have total count)
+while ($row = $result->FetchRow()) {
+    $totcnt++;
+}
+
+// Display record-count based pagination at bottom
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
+
+// Bottom footer with back link (left) and rows per page dropdown (right)
+$footerLeftContent = '';
+if (!$cnt) {
+    $footerLeftContent = '<a href="displaybaseform.php?cust=' . $cust . '">' . my_("Back to search form") . '</a>';
+}
+displayListFooter($w, $footerLeftContent);
 
 if (!$cnt) {
    myError($w,$p, my_("Search found no matching entries"));
-}
-
-$vars="";
-$printed=0;
-while ($row = $result->FetchRow()) {
-    $totcnt++;
-    $vars=DisplayBlock($w, $row, $totcnt, 
-                        "&cust=$cust&areaindex=$areaindex".
-                        "&rangeindex=$rangeindex&ipaddr=$ipaddr&expr=$expr&size=$size".
-                        "&descrip=".urlencode($descrip));
-    if (!empty($vars) and !$printed) {
-        insert($ck,anchor($vars, ">>"));
-        $printed=1;
-    }
 }
 
 $result->Close();

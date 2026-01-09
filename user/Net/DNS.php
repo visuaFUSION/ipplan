@@ -116,7 +116,7 @@ class Net_DNS
      * @return  integer The integer value of an OPCODE
      * @see     Net_DNS::opcodesbyval()
      */
-    function opcodesbyname($opcode)
+    static function opcodesbyname($opcode)
     {
         $op = array(
                 'QUERY'        => 0,   // RFC 1035
@@ -139,7 +139,7 @@ class Net_DNS
      * @return  string  The name of the OPCODE
      * @see     Net_DNS::opcodesbyname()
      */
-    function opcodesbyval($opcodeval)
+    static function opcodesbyval($opcodeval)
     {
         $opval = array(
                 0 => 'QUERY',
@@ -175,7 +175,7 @@ class Net_DNS
      * @return  integer The integer value of an RCODE
      * @see     Net_DNS::rcodesbyval()
      */
-    function rcodesbyname($rcode)
+    static function rcodesbyname($rcode)
     {
         $rc = array(
                 'NOERROR'   => 0,   // RFC 1035
@@ -204,7 +204,7 @@ class Net_DNS
      * @return  string  The name of the RCODE
      * @see     Net_DNS::rcodesbyname()
      */
-    function rcodesbyval($rcodeval)
+    static function rcodesbyval($rcodeval)
     {
         $rc = array(
                 0 => 'NOERROR',
@@ -282,7 +282,7 @@ class Net_DNS
      * @return  integer The integer value of an RR type
      * @see     Net_DNS::typesbyval()
      */
-    function typesbyname($rrtype)
+    static function typesbyname($rrtype)
     {
         $rc = array(
             'SIGZERO'   => 0,       // RFC2931 consider this a pseudo type
@@ -370,7 +370,7 @@ class Net_DNS
      * @return  string  The name of the RR type
      * @see     Net_DNS::typesbyname()
      */
-    function typesbyval($rrtypeval)
+    static function typesbyval($rrtypeval)
     {
         $rc = array(
             0           => 'SIGZERO',  // RFC2931 consider this a pseudo type
@@ -468,7 +468,7 @@ class Net_DNS
      * @return  integer The integer value of an class type
      * @see     Net_DNS::classesbyval()
      */
-    function classesbyname($class)
+    static function classesbyname($class)
     {
         $rc = array(
                 'IN'    => 1,   // RFC 1035
@@ -491,7 +491,7 @@ class Net_DNS
      * @return  string  The name of the RR class
      * @see     Net_DNS::classesbyname()
      */
-    function classesbyval($classval)
+    static function classesbyval($classval)
     {
         $rc = array(
                 1 => 'IN',

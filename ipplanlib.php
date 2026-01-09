@@ -18,8 +18,125 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
 
+// IPplan version - defined here in core lib, not in config.php
+// Format: YYYY.M.D.revision (e.g., 2026.1.9.4 = 4th release on Jan 9, 2026)
+define("IPPLAN_VERSION", "2026.1.9.15");
+
 define("DEFAULTROUTE", "0.0.0.0");
 define("ALLNETS", "255.255.255.255");
+
+
+/*********** Browser Detection *********/
+
+/**
+ * Check if the browser is Internet Explorer or IE Mode (Edge IE Mode)
+ * Current Branch themes are not supported in IE, so we force classic theme
+ */
+function isInternetExplorer() {
+    if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+        return false;
+    }
+    $ua = $_SERVER['HTTP_USER_AGENT'];
+    // Check for IE 10 and below
+    if (preg_match('/MSIE\s/', $ua)) {
+        return true;
+    }
+    // Check for IE 11
+    if (preg_match('/Trident\/.*rv:/', $ua)) {
+        return true;
+    }
+    // Check for Edge IE Mode (sends IE11 user agent)
+    if (strpos($ua, 'Trident') !== false) {
+        return true;
+    }
+    return false;
+}
+
+/*********** Theme helper functions *********/
+
+/**
+ * Get the current theme identifier
+ * Returns theme key like 'current-branch-dark', 'classic', etc.
+ */
+function getCurrentTheme() {
+    // Force classic theme for Internet Explorer (Current Branch themes not supported)
+    if (isInternetExplorer()) {
+        return 'classic';
+    }
+
+    // Check if forced to classic
+    if (defined('FORCE_CLASSIC_THEME') && FORCE_CLASSIC_THEME) {
+        return 'classic';
+    }
+
+    // Check cookie for user preference
+    if (isset($_COOKIE['ipplanTheme']) && !empty($_COOKIE['ipplanTheme'])) {
+        $theme = $_COOKIE['ipplanTheme'];
+        // Handle legacy cookie values - convert old 2026- prefix to current-branch-
+        if (strpos($theme, '2026-') === 0) {
+            $theme = str_replace('2026-', 'current-branch-', $theme);
+        }
+        return $theme;
+    }
+
+    // Fall back to default theme
+    if (defined('DEFAULT_THEME')) {
+        return DEFAULT_THEME;
+    }
+
+    // Ultimate fallback
+    return 'current-branch-dark';
+}
+
+/**
+ * Check if current theme uses the Current Branch sidebar layout
+ */
+function isCurrentBranchTheme($theme = null) {
+    if ($theme === null) {
+        $theme = getCurrentTheme();
+    }
+    // Check for current-branch- prefix or legacy 2026- prefix
+    return (strpos($theme, 'current-branch-') === 0 || strpos($theme, '2026-') === 0);
+}
+
+/**
+ * Backward compatibility alias for isCurrentBranchTheme
+ * @deprecated Use isCurrentBranchTheme() instead
+ */
+function is2026Theme($theme = null) {
+    return isCurrentBranchTheme($theme);
+}
+
+/**
+ * Get CSS file for a theme
+ */
+function getThemeCssFile($theme = null) {
+    global $config_themes;
+
+    if ($theme === null) {
+        $theme = getCurrentTheme();
+    }
+
+    if (isset($config_themes[$theme])) {
+        return $config_themes[$theme];
+    }
+
+    // Fallback to default.css
+    return 'default.css';
+}
+
+/**
+ * Generate IE warning banner HTML
+ * Displayed on all pages when Internet Explorer is detected
+ */
+function getIEWarningBanner() {
+    if (!isInternetExplorer()) {
+        return '';
+    }
+    return '<div style="background: #fff3cd; color: #856404; padding: 8px 16px; text-align: center; font-size: 13px; border-bottom: 1px solid #ffc107;">
+        ' . my_("Internet Explorer detected. Only the Classic theme is supported in this browser.") . '
+    </div>';
+}
 
 
 /*********** start of global code which runs for each script *********/
@@ -219,22 +336,310 @@ function inet_bits($n) {
        return 32-strlen(decbin($n-1));
 }
 
+/*********** Pagination / Rows Per Page *********/
+
+/**
+ * Get the effective rows per page value
+ * Checks user preference cookie first, falls back to MAXTABLESIZE config default
+ * Also checks for page-specific override via 'rpp' GET parameter
+ * When 'rpp' is passed via URL, it also updates the user's cookie preference
+ *
+ * @return int The number of rows to display per page
+ */
+function getRowsPerPage() {
+    // Valid options - must be powers of 2
+    $validOptions = array(64, 128, 256, 512);
+
+    // Check for page-specific override via GET parameter
+    if (isset($_GET['rpp']) && in_array((int)$_GET['rpp'], $validOptions)) {
+        $rpp = (int)$_GET['rpp'];
+        // Also update the cookie so this becomes the user's default
+        setcookie("ipplanRowsPerPage", "$rpp", time() + 10000000, "/");
+        $_COOKIE['ipplanRowsPerPage'] = $rpp;
+        return $rpp;
+    }
+
+    // Check user preference cookie
+    if (isset($_COOKIE['ipplanRowsPerPage'])) {
+        $userPref = (int)$_COOKIE['ipplanRowsPerPage'];
+        if (in_array($userPref, $validOptions)) {
+            return $userPref;
+        }
+    }
+
+    // Fall back to config default
+    return MAXTABLESIZE;
+}
+
+/**
+ * Display a "Records per page" dropdown selector
+ * Preserves existing URL parameters when changing rows per page
+ *
+ * @param object $container The HTML container to insert into
+ * @param string $position Position: 'top' (float right), 'bottom' (float right), 'inline' (default, no float)
+ * @return void
+ */
+function displayRowsPerPageSelector($container, $position = 'inline') {
+    $options = array(64, 128, 256, 512);
+    $current = getRowsPerPage();
+
+    // Build the current URL with existing parameters, minus 'rpp' and 'block'
+    $params = $_GET;
+    unset($params['rpp']);
+    unset($params['block']); // Reset to first page when changing rows per page
+    $baseUrl = $_SERVER['PHP_SELF'];
+    $queryString = http_build_query($params);
+    $separator = $queryString ? '&' : '';
+
+    // Style based on position
+    if ($position === 'inline') {
+        // For use inside table-cell layout (display: table-cell wrapper)
+        $containerStyle = 'display: table-cell; vertical-align: middle; text-align: right; padding-left: 30px;';
+    } else if ($position === 'top' || $position === 'bottom') {
+        $containerStyle = 'float: right; margin: 0;';
+    } else {
+        $containerStyle = 'margin: 10px 0; display: inline-block;';
+    }
+
+    $html = '<div class="rows-per-page-selector" style="' . $containerStyle . '">';
+    $html .= '<label style="margin-right: 8px; font-size: 12px;">' . my_("Records per page:") . '</label>';
+    $html .= '<select onchange="window.location.href=\'' . htmlspecialchars($baseUrl) . '?' . htmlspecialchars($queryString) . $separator . 'rpp=\'+this.value" style="padding: 3px 6px; font-size: 12px;">';
+
+    foreach ($options as $opt) {
+        $selected = ($opt == $current) ? ' selected' : '';
+        $html .= '<option value="' . $opt . '"' . $selected . '>' . $opt . '</option>';
+    }
+
+    $html .= '</select>';
+    $html .= '</div>';
+
+    insert($container, block($html));
+}
+
+/**
+ * Display a list header with title on left and rows per page selector on right
+ * Uses display:table to match the natural width of the content below (like a table)
+ *
+ * @param object $w The HTML container to insert into
+ * @param string $title The title/heading to display (e.g., domain name)
+ * @param bool $showRowsSelector Whether to show the rows per page dropdown
+ * @return void
+ */
+function displayListHeader($w, $title, $showRowsSelector = true) {
+    $html = '<div class="list-header-wrapper" style="display: table; width: auto; min-width: 100%; margin: 10px 0;">';
+    $html .= '<div style="display: table-row;">';
+    $html .= '<div style="display: table-cell; vertical-align: middle;"><strong>' . $title . '</strong></div>';
+
+    if ($showRowsSelector) {
+        // Build selector inline
+        $options = array(64, 128, 256, 512);
+        $current = getRowsPerPage();
+        $params = $_GET;
+        unset($params['rpp']);
+        unset($params['block']);
+        $baseUrl = $_SERVER['PHP_SELF'];
+        $queryString = http_build_query($params);
+        $separator = $queryString ? '&' : '';
+
+        $html .= '<div style="display: table-cell; vertical-align: middle; text-align: right; padding-left: 30px;">';
+        $html .= '<label style="margin-right: 8px; font-size: 12px;">' . my_("Records per page:") . '</label>';
+        $html .= '<select onchange="window.location.href=\'' . htmlspecialchars($baseUrl) . '?' . htmlspecialchars($queryString) . $separator . 'rpp=\'+this.value" style="padding: 3px 6px; font-size: 12px;">';
+
+        foreach ($options as $opt) {
+            $selected = ($opt == $current) ? ' selected' : '';
+            $html .= '<option value="' . $opt . '"' . $selected . '>' . $opt . '</option>';
+        }
+
+        $html .= '</select>';
+        $html .= '</div>';
+    }
+
+    $html .= '</div></div>';
+    insert($w, block($html));
+}
+
+/**
+ * Display a list footer with optional content on left and rows per page selector on right
+ * Uses display:table to match the natural width of the content above (like a table)
+ *
+ * @param object $w The HTML container to insert into
+ * @param string $leftContent Optional HTML content for the left side (e.g., action buttons)
+ * @param bool $showRowsSelector Whether to show the rows per page dropdown
+ * @return void
+ */
+function displayListFooter($w, $leftContent = '', $showRowsSelector = true) {
+    $html = '<div class="list-footer-wrapper" style="display: table; width: auto; min-width: 100%; margin: 10px 0;">';
+    $html .= '<div style="display: table-row;">';
+    $html .= '<div style="display: table-cell; vertical-align: middle;">' . $leftContent . '</div>';
+
+    if ($showRowsSelector) {
+        // Build selector inline
+        $options = array(64, 128, 256, 512);
+        $current = getRowsPerPage();
+        $params = $_GET;
+        unset($params['rpp']);
+        unset($params['block']);
+        $baseUrl = $_SERVER['PHP_SELF'];
+        $queryString = http_build_query($params);
+        $separator = $queryString ? '&' : '';
+
+        $html .= '<div style="display: table-cell; vertical-align: middle; text-align: right; padding-left: 30px;">';
+        $html .= '<label style="margin-right: 8px; font-size: 12px;">' . my_("Records per page:") . '</label>';
+        $html .= '<select onchange="window.location.href=\'' . htmlspecialchars($baseUrl) . '?' . htmlspecialchars($queryString) . $separator . 'rpp=\'+this.value" style="padding: 3px 6px; font-size: 12px;">';
+
+        foreach ($options as $opt) {
+            $selected = ($opt == $current) ? ' selected' : '';
+            $html .= '<option value="' . $opt . '"' . $selected . '>' . $opt . '</option>';
+        }
+
+        $html .= '</select>';
+        $html .= '</div>';
+    }
+
+    $html .= '</div></div>';
+    insert($w, block($html));
+}
+
+/**
+ * Display page navigation showing record counts (e.g., "1-128", "129-256")
+ * This is a cleaner alternative to DisplayBlock that shows actual record numbers
+ *
+ * @param object $w The HTML container to insert into
+ * @param int $totalRecords Total number of records
+ * @param int $currentBlock Current block number (0-based)
+ * @param string $baseParams URL parameters to preserve (e.g., "&cust=1&domain=example.com")
+ * @return void
+ */
+function displayPaginationNav($w, $totalRecords, $currentBlock, $baseParams) {
+    $rowsPerPage = getRowsPerPage();
+    $totalBlocks = ceil($totalRecords / $rowsPerPage);
+
+    if ($totalBlocks <= 1) {
+        return; // No pagination needed
+    }
+
+    $html = '<div class="pagination-nav" style="margin: 10px 0; font-size: 12px;">';
+    $html .= my_("Pages:") . ' ';
+
+    for ($i = 0; $i < $totalBlocks; $i++) {
+        $startRec = ($i * $rowsPerPage) + 1;
+        $endRec = min(($i + 1) * $rowsPerPage, $totalRecords);
+        $label = $startRec . '-' . $endRec;
+
+        $url = $_SERVER["PHP_SELF"] . "?block=" . $i . $baseParams;
+
+        if ($i == $currentBlock) {
+            $html .= '<strong>[' . $label . ']</strong> ';
+        } else {
+            $html .= '<a href="' . htmlspecialchars($url) . '">' . $label . '</a> ';
+        }
+
+        // Add separator between links
+        if ($i < $totalBlocks - 1) {
+            $html .= '| ';
+        }
+    }
+
+    $html .= '</div>';
+
+    insert($w, block($html));
+}
+
 // display various blocks of subnet
 // if $fldindex is set use this as column in dfb to skip
+// Note: For cleaner record-count based pagination, use displayPaginationNav() instead
 function DisplayBlock($w, $row, $totcnt, $anchor, $fldindex="") {
 
-       $cnt=intval($totcnt/MAXTABLESIZE);
+       $rowsPerPage = getRowsPerPage();
+       $cnt=intval($totcnt/$rowsPerPage);
        $vars=$_SERVER["PHP_SELF"]."?block=".$cnt.$anchor;
-       if ($totcnt % MAXTABLESIZE == 0) {
+       if ($totcnt % $rowsPerPage == 0) {
           insert($w,anchor($vars, $fldindex ? $row[$fldindex] : inet_ntoa($row["baseaddr"])));
        }
-       if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1) {
+       if ($totcnt % $rowsPerPage == $rowsPerPage-1) {
           insert($w,text(" - "));
           insert($w,anchor($vars, $fldindex ? $row[$fldindex] : inet_ntoa($row["baseaddr"])));
           insert($w,textbr());
        }
-       
+
        return $vars;
+}
+
+/*********** Error Handling for Resource-Intensive Operations *********/
+
+/**
+ * Custom shutdown handler to catch fatal errors like memory exhaustion or timeout
+ * Call registerResourceErrorHandler() at the start of resource-intensive operations
+ */
+function resourceErrorShutdownHandler() {
+    $error = error_get_last();
+    if ($error !== null) {
+        $errorTypes = array(E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR);
+        if (in_array($error['type'], $errorTypes)) {
+            // Check for memory or timeout related errors
+            $isResourceError = (
+                stripos($error['message'], 'memory') !== false ||
+                stripos($error['message'], 'timeout') !== false ||
+                stripos($error['message'], 'execution time') !== false ||
+                stripos($error['message'], 'exhausted') !== false
+            );
+
+            if ($isResourceError) {
+                // Clear any output buffers
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                $memLimit = ini_get('memory_limit');
+                $maxExecTime = ini_get('max_execution_time');
+
+                // Output a helpful error page
+                echo '<!DOCTYPE html><html><head><title>Resource Limit Exceeded - IPplan</title>';
+                echo '<style>body{font-family:Arial,sans-serif;margin:40px;background:#f5f5f5;}';
+                echo '.error-box{background:#fff;border:1px solid #dc3545;border-radius:8px;padding:30px;max-width:700px;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,0.1);}';
+                echo '.error-title{color:#dc3545;margin:0 0 20px 0;font-size:24px;}';
+                echo '.error-message{color:#333;line-height:1.6;}';
+                echo '.settings-box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:15px;margin:20px 0;font-family:monospace;font-size:13px;}';
+                echo '.solution-list{margin:15px 0;padding-left:20px;}';
+                echo '.solution-list li{margin:8px 0;}';
+                echo '.back-link{display:inline-block;margin-top:20px;padding:10px 20px;background:#0097a7;color:#fff;text-decoration:none;border-radius:4px;}';
+                echo '.back-link:hover{background:#00838f;}';
+                echo '</style></head><body>';
+                echo '<div class="error-box">';
+                echo '<h1 class="error-title">⚠️ Resource Limit Exceeded</h1>';
+                echo '<div class="error-message">';
+                echo '<p>The operation exceeded PHP resource limits. This typically happens when:</p>';
+                echo '<ul class="solution-list">';
+                echo '<li>Importing a large DNS zone with many records</li>';
+                echo '<li>Processing a very large dataset</li>';
+                echo '<li>PHP memory or execution time limits are too low</li>';
+                echo '</ul>';
+                echo '<div class="settings-box">';
+                echo '<strong>Current PHP Settings:</strong><br>';
+                echo 'memory_limit = ' . htmlspecialchars($memLimit) . '<br>';
+                echo 'max_execution_time = ' . htmlspecialchars($maxExecTime) . ' seconds';
+                echo '</div>';
+                echo '<p><strong>Solutions:</strong></p>';
+                echo '<ul class="solution-list">';
+                echo '<li>Ask your system administrator to increase <code>memory_limit</code> in php.ini (e.g., to 256M or 512M)</li>';
+                echo '<li>Ask your system administrator to increase <code>max_execution_time</code> in php.ini (e.g., to 300 or 600)</li>';
+                echo '<li>For IIS: Modify these settings in the PHP configuration for your site</li>';
+                echo '<li>Try importing smaller portions of data if possible</li>';
+                echo '</ul>';
+                echo '<a href="javascript:history.back()" class="back-link">← Go Back</a>';
+                echo '</div></div></body></html>';
+                exit;
+            }
+        }
+    }
+}
+
+/**
+ * Register the resource error handler for operations that may hit memory/timeout limits
+ * Call this at the start of resource-intensive operations like DNS zone transfers
+ */
+function registerResourceErrorHandler() {
+    register_shutdown_function('resourceErrorShutdownHandler');
 }
 
 // displays customer drop down box - requires a working form
@@ -511,6 +916,10 @@ function linkURL($txt) {
 // First, copy PHP server vars into a new var called MY_SERVER_VARS
 // (vars might get updated if running on IIS)
 function getAuthUsername() {
+    // If user has logged out, don't report username even if browser sends cached credentials
+    if (isset($_COOKIE["ipplanNoAuth"]) && $_COOKIE["ipplanNoAuth"] == "yes") {
+        return "";
+    }
 
     $MY_SERVER_VARS = $_SERVER;
 
@@ -531,48 +940,49 @@ function getAuthUsername() {
 function myheading($q, $title, $displaymenu=true) {
 
     // Generate the correct prefix for URLs in menu.
-
     $BASE_URL = base_url();
     $BASE_DIR = base_dir();
 
     $myDirPath = $BASE_DIR . '/menus/';
     $myWwwPath = $BASE_URL . '/menus/';
 
-    // these files should probably not be here
-    require_once $myDirPath . 'lib/PHPLIB.php';
-    require_once $myDirPath . 'lib/layersmenu-common.inc.php';
-    require_once $myDirPath . 'lib/layersmenu.inc.php';
-    require_once $BASE_DIR  . '/menudefs.php';
-    eval("\$ADMIN_MENU = \"$ADMIN_MENU\";");
+    // Get current theme
+    $currentTheme = getCurrentTheme();
+    $isCurrentBranch = isCurrentBranchTheme($currentTheme);
+    $themeCssFile = getThemeCssFile($currentTheme);
 
     // create the html page HEAD section
     insert($q, $header=wheader("IPPlan - $title"));
+    insert($header, generic("meta",array("http-equiv"=>"Content-Type","content"=>"text/html; charset=UTF-8")));
+    insert($header, generic("meta",array("name"=>"viewport","content"=>"width=device-width, initial-scale=1")));
+
+    // Load theme CSS
+    insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$BASE_URL/themes/$themeCssFile")));
+
+    // For Current Branch themes, use sidebar layout
+    if ($isCurrentBranch) {
+        return myheading_current_branch($q, $header, $title, $displaymenu, $BASE_URL, $BASE_DIR);
+    }
+
+    // Classic theme layout (original code path)
     insert($q, $w=container("div",array("class"=>"matte")));
 
-    insert($header, generic("meta",array("http-equiv"=>"Content-Type","content"=>"text/html; charset=UTF-8")));
+    // Add IE warning banner if needed
+    $ieBanner = getIEWarningBanner();
+    if ($ieBanner) {
+        insert($w, block($ieBanner));
+    }
+
+    // Load PHPLayersMenu for classic themes
     if ($displaymenu) {
+        require_once $myDirPath . 'lib/PHPLIB.php';
+        require_once $myDirPath . 'lib/layersmenu-common.inc.php';
+        require_once $myDirPath . 'lib/layersmenu.inc.php';
+        require_once $BASE_DIR  . '/menudefs.php';
+        eval("\$ADMIN_MENU = \"$ADMIN_MENU\";");
+
         insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$myWwwPath"."layersmenu-gtk2.css")));
-        //    insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$myWwwPath"."layersmenu-demo.css")));
-    }
 
-    // Konqueror and Safari browsers do not support overflow: auto css tag so use custom stylesheet
-    if (stristr($_SERVER["HTTP_USER_AGENT"], "konqueror") or 
-        stristr($_SERVER["HTTP_USER_AGENT"], "safari")) {
-       insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$BASE_URL"."/themes/default-safari.css")));
-    }
-    else {
-        // Added theme support.
-        $themecookie=isset($_COOKIE["ipplanTheme"]) ? $_COOKIE["ipplanTheme"] : "";
-        global $config_themes;  // obtained from config.php file which is global
-        if (!empty($themecookie) and $config_themes[$themecookie] <> "") {
-            insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$BASE_URL"."/themes/$config_themes[$themecookie]")));
-        }
-        else {
-            insert($header, generic("link",array("rel"=>"stylesheet","href"=>"$BASE_URL"."/themes/default.css")));
-        }
-    }
-
-    if ($displaymenu) {
         insert($w, script("",array("language"=>"JavaScript","type"=>"text/javascript","src"=> $myWwwPath."libjs/layersmenu-browser_detection.js")));
         insert($w, script("",array("language"=>"JavaScript","type"=>"text/javascript","src"=> $myWwwPath . 'libjs/layersmenu-library.js')));
         insert($w, script("",array("language"=>"JavaScript","type"=>"text/javascript","src"=> $myWwwPath . 'libjs/layersmenu.js')));
@@ -620,7 +1030,354 @@ function myheading($q, $title, $displaymenu=true) {
     insert($w,$con1=container("div",array("class"=>"footerbox")));
     insert($con1,block("IPPlan v" . IPPLAN_VERSION));
     return $con;
+}
 
+/**
+ * Current Branch theme layout with sidebar navigation
+ */
+function myheading_current_branch($q, $header, $title, $displaymenu, $BASE_URL, $BASE_DIR) {
+
+    $username = getAuthUsername();
+
+    // Build sidebar navigation HTML
+    $sidebarNav = getSidebarNavigation($BASE_URL, $displaymenu);
+
+    // Check for logo file - theme-override/images takes priority over images directory
+    $logoFile = '';
+    $logoOptions = array(
+        'SystemLogo_621x146.png',
+        'IPPlan_255.png',
+        'IPPlan_256.png',
+        'logo.png',
+        'ipplan-logo.png',
+        'logo.svg'
+    );
+    foreach ($logoOptions as $logoName) {
+        // Check theme-override first
+        if (file_exists($BASE_DIR . '/theme-override/images/' . $logoName)) {
+            $logoFile = $BASE_URL . '/theme-override/images/' . $logoName;
+            break;
+        }
+        // Fall back to default images directory
+        if (file_exists($BASE_DIR . '/images/' . $logoName)) {
+            $logoFile = $BASE_URL . '/images/' . $logoName;
+            break;
+        }
+    }
+
+    // Build logo HTML - use image if available, fallback to text
+    // Logo is clickable and links to home page
+    if ($logoFile) {
+        $logoInner = '<img src="' . $logoFile . '" alt="IPPlan" class="ipplan-sidebar-logo-img">';
+    } else {
+        $logoInner = '<div class="ipplan-sidebar-logo-icon">IP</div>
+                <div>
+                    <div class="ipplan-sidebar-logo-text">IPPlan</div>
+                    <div class="ipplan-sidebar-logo-subtitle">' . my_("Address Management") . '</div>
+                </div>';
+    }
+    // Wrap logo content in a link to home page
+    $logoHtml = '<a href="' . $BASE_URL . '/index.php" class="ipplan-sidebar-logo-link">' . $logoInner . '</a>';
+
+    // Build the complete Current Branch layout
+    $layoutHtml = '
+    <div class="ipplan-app">
+        <!-- Sidebar -->
+        <aside class="ipplan-sidebar">
+            <div class="ipplan-sidebar-logo">
+                ' . $logoHtml . '
+            </div>
+
+            <div class="ipplan-sidebar-nav-wrapper">
+            ' . $sidebarNav . '
+            </div>
+
+            <div class="ipplan-sidebar-userbox">
+                ' . ($username ? '
+                <div class="ipplan-sidebar-userbox-label">' . my_("Logged in") . '</div>
+                <div class="ipplan-sidebar-userbox-name">' . htmlspecialchars($username) . '</div>
+                <div class="ipplan-sidebar-userbox-buttons">
+                    <a href="' . $BASE_URL . '/user/modifyuserform.php" class="btn">' . my_("Profile") . '</a>
+                    <a href="' . $BASE_URL . '/user/logout.php" class="btn btn-danger">' . my_("Logout") . '</a>
+                </div>
+                ' : '
+                <div class="ipplan-sidebar-userbox-label">' . my_("Not Logged In") . '</div>
+                <div class="ipplan-sidebar-userbox-buttons">
+                    <a href="' . $BASE_URL . '/user/login.php" class="btn btn-primary" onclick="window.location.href=this.href;return false;">' . my_("Login") . '</a>
+                </div>
+                ') . '
+            </div>
+
+            <div class="ipplan-sidebar-version">IPPlan v' . IPPLAN_VERSION . '</div>
+        </aside>
+
+        <script>
+        // Position submenus on hover to align with their parent nav item
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".ipplan-sidebar-nav-dropdown").forEach(function(dropdown) {
+                dropdown.addEventListener("mouseenter", function() {
+                    var submenu = this.querySelector(".ipplan-sidebar-submenu");
+                    if (submenu) {
+                        var rect = this.getBoundingClientRect();
+                        var viewportHeight = window.innerHeight;
+                        var submenuHeight = submenu.offsetHeight || 200;
+
+                        // Start aligned with the menu item
+                        var topPos = rect.top;
+
+                        // If submenu would go off bottom of screen, move it up
+                        if (topPos + submenuHeight > viewportHeight - 20) {
+                            topPos = viewportHeight - submenuHeight - 20;
+                        }
+
+                        // Never go above the viewport
+                        if (topPos < 10) {
+                            topPos = 10;
+                        }
+
+                        submenu.style.top = topPos + "px";
+                    }
+                });
+            });
+        });
+        </script>
+
+        <!-- Main content -->
+        <main class="ipplan-main">
+            <!-- Header bar -->
+            <header class="ipplan-header">
+                <div class="ipplan-header-inner">
+                    <div class="ipplan-header-title-section">
+                        <div class="ipplan-header-breadcrumb">' . my_("IPPlan") . '</div>
+                        <h1 class="ipplan-header-title">' . htmlspecialchars($title) . '</h1>
+                    </div>
+                    <div class="ipplan-header-actions">
+                        <a href="' . $BASE_URL . '/user/searchallform.php" class="btn">' . my_("Search") . '</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content area -->
+            <div class="ipplan-content">
+    ';
+
+    // Insert the opening layout HTML
+    insert($q, block($layoutHtml));
+
+    // Create a proper container for page content (this is what gets returned)
+    insert($q, $contentContainer = container("div", array("class" => "normalbox")));
+
+    // Set the flag so Window class knows to close the Current Branch divs
+    $GLOBALS['ipplan_current_branch_layout'] = true;
+
+    // Return the content container - pages will insert their content into this
+    return $contentContainer;
+}
+
+/**
+ * Sidebar navigation icons as inline SVG (18x18, fill="currentColor")
+ * Inspired by visuaFUSION phishing simulator design
+ */
+function getSidebarIcon($iconName) {
+    $icons = array(
+        'dashboard' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M7.7 6.67H1.46C.65 6.67 0 6.01 0 5.21V1.46C0 .65.65 0 1.46 0h6.25c.8 0 1.46.65 1.46 1.46v3.75c0 .8-.65 1.46-1.46 1.46zM1.46 1.25c-.12 0-.21.09-.21.21v3.75c0 .12.09.21.21.21h6.25c.12 0 .21-.09.21-.21V1.46c0-.12-.09-.21-.21-.21H1.46z" fill="currentColor"/><path d="M7.7 20H1.46C.65 20 0 19.35 0 18.54V9.79c0-.8.65-1.46 1.46-1.46h6.25c.8 0 1.46.65 1.46 1.46v8.75c0 .8-.65 1.46-1.46 1.46zM1.46 9.58c-.12 0-.21.09-.21.21v8.75c0 .12.09.21.21.21h6.25c.12 0 .21-.09.21-.21V9.79c0-.12-.09-.21-.21-.21H1.46z" fill="currentColor"/><path d="M18.54 20h-6.25c-.8 0-1.46-.65-1.46-1.46v-3.75c0-.8.65-1.46 1.46-1.46h6.25c.8 0 1.46.65 1.46 1.46v3.75c0 .8-.65 1.46-1.46 1.46zm-6.25-5.42c-.12 0-.21.09-.21.21v3.75c0 .12.09.21.21.21h6.25c.12 0 .21-.09.21-.21v-3.75c0-.12-.09-.21-.21-.21h-6.25z" fill="currentColor"/><path d="M18.54 11.67h-6.25c-.8 0-1.46-.65-1.46-1.46V1.46c0-.8.65-1.46 1.46-1.46h6.25c.8 0 1.46.65 1.46 1.46v8.75c0 .8-.65 1.46-1.46 1.46zm-6.25-10.42c-.12 0-.21.09-.21.21v8.75c0 .12.09.21.21.21h6.25c.12 0 .21-.09.21-.21V1.46c0-.12-.09-.21-.21-.21h-6.25z" fill="currentColor"/></svg>',
+        'customers' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M16.8 10.3h-1.9c-.26 0-.5.03-.75.1-.47-.92-1.43-1.56-2.54-1.56h-3.37c-1.11 0-2.07.64-2.54 1.56-.24-.07-.49-.1-.75-.1H3.06c-1.57 0-2.85 1.28-2.85 2.85v3.05c0 .94.77 1.71 1.71 1.71h16.37c.94 0 1.71-.77 1.71-1.71v-3.05c0-1.57-1.28-2.85-2.85-2.85zm-12.02 1.4v5.09H1.92c-.31 0-.57-.26-.57-.57v-3.05c0-.94.77-1.71 1.71-1.71h1.9c.15 0 .3.02.44.06-.01.06-.02.12-.02.18zm8.83 5.09H6.11v-5.09c0-.94.77-1.71 1.71-1.71h5.88c.94 0 1.71.77 1.71 1.71v5.09zm5.17-.57c0 .31-.26.57-.57.57h-4.31v-5.09c0-.08 0-.15-.01-.23.14-.04.29-.06.44-.06h1.9c.94 0 1.71.77 1.71 1.71v3.1z" fill="currentColor"/><path d="M4.04 4.94c-1.4 0-2.53 1.14-2.53 2.53s1.14 2.53 2.53 2.53 2.53-1.14 2.53-2.53-1.13-2.53-2.53-2.53zm0 3.77c-.69 0-1.24-.56-1.24-1.24s.56-1.24 1.24-1.24 1.24.56 1.24 1.24-.55 1.24-1.24 1.24z" fill="currentColor"/><path d="M9.98 1.8c-1.87 0-3.38 1.52-3.38 3.38s1.52 3.38 3.38 3.38 3.38-1.52 3.38-3.38S11.84 1.8 9.98 1.8zm0 5.47c-1.16 0-2.09-.94-2.09-2.09s.94-2.09 2.09-2.09 2.09.94 2.09 2.09-.94 2.09-2.09 2.09z" fill="currentColor"/><path d="M15.91 4.94c-1.4 0-2.53 1.14-2.53 2.53s1.14 2.53 2.53 2.53 2.53-1.14 2.53-2.53-1.13-2.53-2.53-2.53zm0 3.77c-.69 0-1.24-.56-1.24-1.24s.56-1.24 1.24-1.24 1.24.56 1.24 1.24-.55 1.24-1.24 1.24z" fill="currentColor"/></svg>',
+        'subnets' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="7" y="1" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="1" y="15" width="5" height="4" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="7.5" y="15" width="5" height="4" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="15" width="5" height="4" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 5v3m0 0v4m0-4h-6.5v7m6.5-7h6.5v7" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+        'dns' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.25" stroke="currentColor" stroke-width="1.5" fill="none"/><ellipse cx="10" cy="10" rx="3.5" ry="8.25" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 10h16M3 6h14M3 14h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+        'search' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="6.75" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+        'admin' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 1L2 4.5v5c0 4.42 3.42 8.54 8 9.5 4.58-.96 8-5.08 8-9.5v-5L10 1z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+        'settings' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M16.5 10c0-.34-.03-.67-.08-1l1.74-1.36-1.75-3.03-2.03.82a6.96 6.96 0 0 0-1.73-1l-.31-2.18h-3.5l-.31 2.18c-.63.24-1.21.58-1.73 1l-2.03-.82-1.75 3.03L4.76 9c-.1.66-.1 1.34 0 2l-1.74 1.36 1.75 3.03 2.03-.82c.52.42 1.1.76 1.73 1l.31 2.18h3.5l.31-2.18c.63-.24 1.21-.58 1.73-1l2.03.82 1.75-3.03L16.42 11c.05-.33.08-.66.08-1z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+        'help' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.25" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7.5 7.5a2.5 2.5 0 1 1 3.25 2.39c-.46.14-.75.58-.75 1.06V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="10" cy="14.5" r="0.75" fill="currentColor"/></svg>'
+    );
+    return isset($icons[$iconName]) ? $icons[$iconName] : '';
+}
+
+/**
+ * Generate sidebar navigation HTML for Current Branch themes
+ * Organized into sections like visuaFUSION
+ */
+function getSidebarNavigation($BASE_URL, $displaymenu) {
+    if (!$displaymenu) {
+        return '';
+    }
+
+    // Get current page to highlight active nav item
+    $currentPage = basename($_SERVER['PHP_SELF']);
+    $currentDir = basename(dirname($_SERVER['PHP_SELF']));
+
+    // Define sidebar navigation structure with sections
+    $sections = array(
+        // Main section - no header
+        array(
+            'header' => '',
+            'items' => array(
+                array(
+                    'label' => my_('Dashboard'),
+                    'url' => $BASE_URL . '/dashboard.php',
+                    'match' => array('dashboard.php'),
+                    'icon' => 'dashboard'
+                )
+            )
+        ),
+        // Network section
+        array(
+            'header' => my_('Network'),
+            'items' => array(
+                array(
+                    'label' => my_('Customers'),
+                    'url' => $BASE_URL . '/user/displaycustomerform.php',
+                    'match' => array('displaycustomerform.php', 'modifycustomer.php', 'createcustomer.php'),
+                    'icon' => 'customers',
+                    'children' => array(
+                        array('label' => my_('Create New'), 'url' => $BASE_URL . '/user/modifycustomer.php'),
+                        array('label' => my_('Edit Existing'), 'url' => $BASE_URL . '/user/displaycustomerform.php')
+                    )
+                ),
+                array(
+                    'label' => my_('Subnets'),
+                    'url' => $BASE_URL . '/user/displaybaseform.php',
+                    'match' => array('displaybaseform.php', 'displaybase.php', 'displaysubnet.php', 'modifybase.php', 'modifybaseform.php', 'createbase.php', 'createbaseform.php', 'createsubnetform.php', 'createarea.php', 'createrange.php', 'modifyarearangeform.php', 'treeview.php', 'displayoverlapform.php'),
+                    'icon' => 'subnets',
+                    'children' => array(
+                        array('label' => my_('Display Subnets'), 'url' => $BASE_URL . '/user/displaybaseform.php'),
+                        array('label' => my_('Tree View'), 'url' => $BASE_URL . '/user/treeview.php'),
+                        array('label' => my_('Create Subnet'), 'url' => $BASE_URL . '/user/createsubnetform.php'),
+                        array('label' => my_('Modify Subnet'), 'url' => $BASE_URL . '/user/modifybaseform.php'),
+                        array('label' => my_('---')),
+                        array('label' => my_('Create Area'), 'url' => $BASE_URL . '/user/createarea.php'),
+                        array('label' => my_('Create Range'), 'url' => $BASE_URL . '/user/createrange.php'),
+                        array('label' => my_('Modify Areas/Ranges'), 'url' => $BASE_URL . '/user/modifyarearangeform.php'),
+                        array('label' => my_('---')),
+                        array('label' => my_('Overlap Check'), 'url' => $BASE_URL . '/user/displayoverlapform.php')
+                    )
+                ),
+                array(
+                    'label' => my_('DNS'),
+                    'url' => $BASE_URL . '/user/modifydns.php',
+                    'match' => array('modifydns.php', 'modifydnsform.php', 'modifydnsrecord.php', 'modifydnsrecordform.php', 'modifyzone.php', 'modifyzoneform.php'),
+                    'icon' => 'dns',
+                    'children' => array(
+                        array('label' => my_('Zone Domains'), 'url' => $BASE_URL . '/user/modifydns.php'),
+                        array('label' => my_('DNS Records'), 'url' => $BASE_URL . '/user/modifydnsrecord.php'),
+                        array('label' => my_('Reverse DNS'), 'url' => $BASE_URL . '/user/modifyzone.php')
+                    )
+                )
+            )
+        ),
+        // Tools section
+        array(
+            'header' => my_('Tools'),
+            'items' => array(
+                array(
+                    'label' => my_('Search'),
+                    'url' => $BASE_URL . '/user/searchallform.php',
+                    'match' => array('searchallform.php', 'searchall.php', 'finddns.php', 'findip.php', 'findsubnet.php', 'findfreeform.php', 'findfree.php'),
+                    'icon' => 'search',
+                    'children' => array(
+                        array('label' => my_('Search Subnets'), 'url' => $BASE_URL . '/user/searchallform.php'),
+                        array('label' => my_('Find Free Space'), 'url' => $BASE_URL . '/user/findfreeform.php')
+                    )
+                ),
+                array(
+                    'label' => my_('Admin'),
+                    'url' => $BASE_URL . '/admin/usermanager.php',
+                    'match' => array('usermanager.php', 'groupedit.php', 'polldns.php', 'importbaseform.php', 'exportform.php', 'exportbaseform.php', 'exportipform.php', 'importipform.php', 'displayboundsform.php', 'displayauditlog.php', 'maintenance.php'),
+                    'icon' => 'admin',
+                    'children' => array(
+                        array('label' => my_('Users'), 'url' => $BASE_URL . '/admin/usermanager.php'),
+                        array('label' => my_('Create User'), 'url' => $BASE_URL . '/admin/usermanager.php?action=newuserform'),
+                        array('label' => my_('Groups'), 'url' => $BASE_URL . '/admin/usermanager.php?action=newgroupform'),
+                        array('label' => my_('Boundaries'), 'url' => $BASE_URL . '/admin/displayboundsform.php'),
+                        array('label' => my_('---')),
+                        array('label' => my_('Import Subnets'), 'url' => $BASE_URL . '/admin/importbaseform.php'),
+                        array('label' => my_('Import IPs'), 'url' => $BASE_URL . '/admin/importipform.php'),
+                        array('label' => my_('Export Subnets'), 'url' => $BASE_URL . '/admin/exportbaseform.php'),
+                        array('label' => my_('Export IPs'), 'url' => $BASE_URL . '/admin/exportipform.php'),
+                        array('label' => my_('---')),
+                        array('label' => my_('Maintenance'), 'url' => $BASE_URL . '/admin/maintenance.php'),
+                        array('label' => my_('Audit Log'), 'url' => $BASE_URL . '/admin/displayauditlog.php')
+                    )
+                ),
+                array(
+                    'label' => my_('Settings'),
+                    'url' => $BASE_URL . '/user/changesettings.php',
+                    'match' => array('changesettings.php', 'tplbaseform.php', 'changepassword.php'),
+                    'icon' => 'settings',
+                    'children' => array(
+                        array('label' => my_('Display Settings'), 'url' => $BASE_URL . '/user/changesettings.php'),
+                        array('label' => my_('Change Password'), 'url' => $BASE_URL . '/admin/changepassword.php')
+                    )
+                )
+            )
+        ),
+        // Miscellaneous section
+        array(
+            'header' => my_('Miscellaneous'),
+            'items' => array(
+                array(
+                    'label' => my_('Help'),
+                    'url' => $BASE_URL . '/help.php',
+                    'match' => array('help.php', 'about.php', 'license.php'),
+                    'icon' => 'help',
+                    'children' => array(
+                        array('label' => my_('User Guide'), 'url' => $BASE_URL . '/help.php?section=user&page=index'),
+                        array('label' => my_('Admin Guide'), 'url' => $BASE_URL . '/help.php?section=admin&page=index'),
+                        array('label' => my_('---')),
+                        array('label' => my_('About'), 'url' => $BASE_URL . '/about.php'),
+                        array('label' => my_('License'), 'url' => $BASE_URL . '/license.php')
+                    )
+                )
+            )
+        )
+    );
+
+    $html = '';
+
+    foreach ($sections as $section) {
+        // Add section header if present
+        if (!empty($section['header'])) {
+            $html .= '<div class="ipplan-sidebar-section">' . $section['header'] . '</div>';
+        }
+
+        $html .= '<nav class="ipplan-sidebar-nav">';
+
+        foreach ($section['items'] as $item) {
+            $isActive = in_array($currentPage, $item['match']);
+            $activeClass = $isActive ? ' active' : '';
+            $hasChildren = isset($item['children']) && count($item['children']) > 0;
+            $chevron = $hasChildren ? '<span class="ipplan-sidebar-nav-chevron">&#9656;</span>' : '';
+
+            if ($hasChildren) {
+                $html .= '<div class="ipplan-sidebar-nav-dropdown">';
+            }
+
+            $icon = isset($item['icon']) ? '<span class="ipplan-sidebar-nav-icon">' . getSidebarIcon($item['icon']) . '</span>' : '';
+            $html .= '<a href="' . $item['url'] . '" class="ipplan-sidebar-nav-item' . $activeClass . '">';
+            $html .= $icon;
+            $html .= '<span class="ipplan-sidebar-nav-label">' . $item['label'] . '</span>';
+            $html .= $chevron;
+            $html .= '</a>';
+
+            // Render submenu if present
+            if ($hasChildren) {
+                $html .= '<div class="ipplan-sidebar-submenu">';
+                foreach ($item['children'] as $child) {
+                    if ($child['label'] === my_('---')) {
+                        $html .= '<div class="ipplan-sidebar-submenu-divider"></div>';
+                    } else {
+                        $childActive = isset($child['url']) && strpos($_SERVER['REQUEST_URI'], $child['url']) !== false ? ' active' : '';
+                        $html .= '<a href="' . $child['url'] . '" class="ipplan-sidebar-submenu-item' . $childActive . '">' . $child['label'] . '</a>';
+                    }
+                }
+                $html .= '</div>';
+                $html .= '</div>';
+            }
+        }
+
+        $html .= '</nav>';
+    }
+
+    return $html;
 }
 
 // add Copy and Paste links - completes a cookie with a serialized copy of the form values

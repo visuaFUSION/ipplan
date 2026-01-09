@@ -188,6 +188,8 @@ function checkAll(val) {
    // insert($f,freset(array("value"=>my_("Clear"))));
 }
 else {
+   insert($w,anchor("displayswipform.php?cust=$cust", my_("Back to search form")));
+   insert($w,block("<p>"));
    myError($w,$p, my_("Search found no matching entries"));
 }
 

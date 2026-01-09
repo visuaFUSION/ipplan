@@ -439,7 +439,7 @@ class Net_DNS_Resolver
      *
      * @access private
      */
-    function nextid()
+    static function nextid()
     {
         if ($GLOBALS['_Net_DNS_packet_id']++ > 65535) {
         	$GLOBALS['_Net_DNS_packet_id']= 1;
@@ -1208,7 +1208,7 @@ class Net_DNS_Resolver
                 echo ";; axfr_start($ns:$dstport)\n";
             }
             $sock_key = "$ns:$dstport";
-            if (is_resource($this->sockets[$sock_key])) {
+            if (isset($this->sockets[$sock_key]) && is_resource($this->sockets[$sock_key])) {
                 $sock = &$this->sockets[$sock_key];
             } else {
                 if (! ($sock = @fsockopen($ns, $dstport, $errno,

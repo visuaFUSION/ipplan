@@ -1,12 +1,70 @@
-# Upgrading IPplan
+# Upgrading and Updating IPplan
 
-This guide covers upgrading from previous versions to the current PHP 8.x compatible release.
+This guide covers both upgrading from legacy versions and updating between Current Branch releases.
 
-## Important: Do Not Reuse Your Old config.php
+## Terminology
 
-**Your old config.php file will not work with this version.** The new version includes required configuration options that do not exist in older versions. You must use the new config.php and transfer your settings to it.
+- **Upgrade**: Moving from legacy IPplan (v4.92b) to the Current Branch
+- **Update**: Moving between Current Branch versions (e.g., 2026.1.8.2 → 2026.1.9.4)
+- **Current Branch**: The actively maintained, PHP 8.x compatible version with modern features
+- **Legacy**: The original IPplan v4.92b release from 2009
 
-## Upgrading from v4.92b or Earlier
+---
+
+## Updating Current Branch (2026.x.x.x → 2026.x.x.x)
+
+Updating between Current Branch versions is straightforward since configuration formats remain compatible.
+
+### Quick Update Steps
+
+1. **Backup your installation**
+   ```bash
+   cp -r /var/www/html/ipplan /var/www/html/ipplan.backup
+   mysqldump -u root -p ipplan > ipplan_backup_$(date +%Y%m%d).sql
+   ```
+
+2. **Download the new version** and extract it
+
+3. **Replace files** (preserving your config.php and theme-override)
+   ```bash
+   # Save your config and custom branding
+   cp /var/www/html/ipplan/config.php /tmp/config.php.save
+   cp -r /var/www/html/ipplan/theme-override /tmp/theme-override.save 2>/dev/null
+
+   # Replace files
+   rm -rf /var/www/html/ipplan/*
+   tar -xzf ipplan-2026.x.x.x.tar.gz -C /var/www/html/ipplan/
+
+   # Restore your config
+   cp /tmp/config.php.save /var/www/html/ipplan/config.php
+
+   # Restore custom branding (if you had any)
+   cp -r /tmp/theme-override.save /var/www/html/ipplan/theme-override 2>/dev/null
+   ```
+
+4. **Clear browser cache** (Ctrl+F5) and verify functionality
+
+> **💡 Custom Branding:** If you have customized your logo or images using the `theme-override/` directory, make sure to backup and restore this directory during updates. See [Custom Branding](custom-branding.md) for details.
+
+### What Stays the Same
+
+- Database schema (no migration needed)
+- Configuration format (config.php is compatible)
+- Custom branding in `theme-override/` (when preserved during update)
+- User accounts and permissions
+
+### Review Release Notes
+
+Before updating, check the CHANGELOG for:
+- New features you may want to configure
+- Any deprecated settings
+- Known issues or workarounds
+
+---
+
+## Upgrading from Legacy (v4.92b → Current Branch)
+
+**Important:** This is a significant upgrade. Your old config.php will NOT work with the Current Branch.
 
 ### Pre-Upgrade Checklist
 
@@ -56,7 +114,7 @@ After backing up (Step 1 of the checklist), remove the old files from your web d
 rm -rf /var/www/html/ipplan/*
 ```
 
-#### Step 3: Install the New Version
+#### Step 3: Install Current Branch
 
 Extract the new version directly to your web directory:
 
@@ -113,30 +171,37 @@ chmod -R 755 /var/www/html/ipplan
    - IP addresses load properly
    - Search functionality works
 
-### What Changed in This Version
+---
 
-#### Database Driver (Required Change)
+## What Changed: Legacy → Current Branch
+
+### Database Driver (Required Change)
 - Old `mysql` and `maxsql` drivers were removed in PHP 7+
 - `mysqli` driver is now required
 - No database schema changes are needed - your existing data works as-is
 
-#### PHP 8 Compatibility
+### PHP 8 Compatibility
 - Class property declarations updated
 - Constructor methods modernized
 - Deprecated function calls replaced
 
-#### New Features
+### New Features in Current Branch
+- Modern 2026 themes (Dark and Light)
+- Sidebar navigation with icons
+- Custom branding support (theme-override system)
 - Integrated help documentation system
 - About page with version info
 - Configurable issue tracker and community links
 - Editable main page content (docs/main-menu.md)
 
-#### Updated Dependencies
+### Updated Dependencies
 - ADOdb upgraded to v5.22.8
 - PHPLayersMenu updated for modern browsers
 - Net/DNS library updated for PHP 8
 
-## Troubleshooting Upgrades
+---
+
+## Troubleshooting
 
 ### "Your config.php file is inconsistent"
 
@@ -173,32 +238,45 @@ error_reporting(E_ALL);
 
 ### IIS-Specific Issues
 
-- **gzip compression issues**: The new version auto-detects IIS and adjusts accordingly
+- **gzip compression issues**: Current Branch auto-detects IIS and adjusts accordingly
 - **Path separator issues**: Backslash handling has been fixed
 - **Timeouts**: Increase FastCGI timeout in IIS Manager if needed
 
+---
+
 ## Rolling Back
 
-If you need to revert to your previous installation:
+### Rolling Back an Update (Current Branch → Current Branch)
 
 ```bash
-# Remove failed upgrade
+# Restore from backup
+rm -rf /var/www/html/ipplan/*
+cp -r /var/www/html/ipplan.backup/* /var/www/html/ipplan/
+```
+
+### Rolling Back an Upgrade (Current Branch → Legacy)
+
+```bash
+# Remove Current Branch
 rm -rf /var/www/html/ipplan/*
 
-# Restore backup
+# Restore legacy backup
 cp -r /var/www/html/ipplan.backup/* /var/www/html/ipplan/
 
 # Restore database if needed
 mysql -u root -p ipplan < ipplan_backup_YYYYMMDD.sql
 ```
 
-Note: Rolling back also requires reverting to a PHP version that supports the old mysql driver (PHP 5.x), which is not recommended for security reasons.
+**Note:** Rolling back to legacy also requires reverting to a PHP version that supports the old mysql driver (PHP 5.x), which is not recommended for security reasons.
+
+---
 
 ## Version History
 
-| Version | Date | Notes |
-|---------|------|-------|
-| 2026.1.x | Jan 2026 | PHP 8.x compatibility, help system, modernization |
-| 4.92b | 2009 | Last original release |
+| Version | Branch | Date | Notes |
+|---------|--------|------|-------|
+| 2026.1.9.x | Current Branch | Jan 2026 | Theme system, custom branding, icons |
+| 2026.1.x.x | Current Branch | Jan 2026 | PHP 8.x compatibility, help system |
+| 4.92b | Legacy | 2009 | Last original release |
 
 See CHANGELOG for detailed version history.

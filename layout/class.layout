@@ -380,13 +380,30 @@ class Window extends HTMLBase {
         }
 
         function printit() {
-           //echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n";
-           echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\n";
-           echo "        \"http://www.w3.org/TR/html4/loose.dtd\">\n";
-           echo "<HTML>\n<HEAD>\n";
+           // Use HTML5 doctype for Current Branch themes, HTML4 for classic
+           $isCurrentBranch = isset($GLOBALS['ipplan_current_branch_layout']) && $GLOBALS['ipplan_current_branch_layout'];
+
+           if ($isCurrentBranch) {
+               echo "<!DOCTYPE html>\n";
+               echo "<html lang=\"en\">\n<head>\n";
+           } else {
+               echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\n";
+               echo "        \"http://www.w3.org/TR/html4/loose.dtd\">\n";
+               echo "<HTML>\n<HEAD>\n";
+           }
+
            $this->printheader();
            echo "\n</HEAD>\n<BODY" . $this->settings . ">";
            $this->printchild();
+
+           // Close Current Branch layout divs (ipplan-content, ipplan-main, ipplan-app)
+           // Note: normalbox is closed by its Container class
+           if ($isCurrentBranch) {
+               echo "\n            </div><!-- /.ipplan-content -->";
+               echo "\n        </main><!-- /.ipplan-main -->";
+               echo "\n    </div><!-- /.ipplan-app -->";
+           }
+
            echo "\n</BODY>\n</HTML>\n";
         }
 
@@ -423,6 +440,58 @@ class WHeader extends HTMLBase {
              foreach($this->meta as $name => $content) {
                  echo "        <META NAME=\"".$name."\" CONTENT=\"".$content."\" />";
              }
+          }
+          // Add favicon support - check theme-override first, then standard locations
+          $baseDir = dirname(dirname(__FILE__));
+          $faviconNames = array('favicon.ico', 'favicon.png');
+          $faviconFound = false;
+          $faviconUrl = '';
+          $faviconType = '';
+
+          // Calculate base URL for the IPplan installation
+          $scriptPath = dirname($_SERVER['PHP_SELF']);
+          // Go up one level if we're in a subdirectory like /user or /admin
+          if (preg_match('/(user|admin|menus)$/', $scriptPath)) {
+              $baseUrl = dirname($scriptPath);
+          } else {
+              $baseUrl = $scriptPath;
+          }
+          // Normalize - remove trailing slash, handle root
+          $baseUrl = rtrim($baseUrl, '/\\');
+          if ($baseUrl === '.' || empty($baseUrl)) {
+              $baseUrl = '';
+          }
+
+          // Check theme-override/images first
+          foreach ($faviconNames as $faviconName) {
+              $fullPath = $baseDir . '/theme-override/images/' . $faviconName;
+              if (file_exists($fullPath)) {
+                  $ext = pathinfo($faviconName, PATHINFO_EXTENSION);
+                  $faviconType = ($ext === 'ico') ? 'image/x-icon' : 'image/' . $ext;
+                  $faviconUrl = $baseUrl . '/theme-override/images/' . $faviconName;
+                  $faviconFound = true;
+                  break;
+              }
+          }
+
+          // Fall back to images directory
+          if (!$faviconFound) {
+              foreach ($faviconNames as $faviconName) {
+                  $fullPath = $baseDir . '/images/' . $faviconName;
+                  if (file_exists($fullPath)) {
+                      $ext = pathinfo($faviconName, PATHINFO_EXTENSION);
+                      $faviconType = ($ext === 'ico') ? 'image/x-icon' : 'image/' . $ext;
+                      $faviconUrl = $baseUrl . '/images/' . $faviconName;
+                      $faviconFound = true;
+                      break;
+                  }
+              }
+          }
+
+          // Output favicon link if found
+          if ($faviconFound) {
+              echo "\n        <link rel=\"icon\" type=\"$faviconType\" href=\"$faviconUrl\">";
+              echo "\n        <link rel=\"shortcut icon\" type=\"$faviconType\" href=\"$faviconUrl\">";
           }
           $this->printchild();
         }

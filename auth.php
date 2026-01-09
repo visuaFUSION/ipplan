@@ -47,22 +47,66 @@ class BasicAuthenticator {
          
     
     function authenticate() {
+        // Check if user has explicitly logged out
+        $logoutCookie = isset($_COOKIE["ipplanNoAuth"]) ? $_COOKIE["ipplanNoAuth"] : "";
 
-        if ((isset($_COOKIE["ipplanNoAuth"]) and $_COOKIE["ipplanNoAuth"]=="yes") or 
-            $this->isAuthenticated() == 0) {
+        // Three-phase logout handling to defeat browser credential caching:
+        // Phase 1: cookie="yes" - reject, set cookie to "1" (first rejection)
+        // Phase 2: cookie="1" - reject again (catches browser's auto-retry), set to "2"
+        // Phase 3: cookie="2" - user has actually seen prompt, accept valid credentials
+        //
+        // This is necessary because browsers automatically retry 401 responses with
+        // cached credentials BEFORE showing the login dialog to the user.
 
-            // delete logout cookie
-            setcookie("ipplanNoAuth", "", time() - 3600, "/");
-            Header("WWW-Authenticate: Basic realm=\"$this->realm\"");
-            // adapt to broken servers - anything bigger than 1.0 uses 
-            // new method
+        $realm = $this->realm . " (Login Required)";
+
+        if ($logoutCookie === "yes" || $logoutCookie === "1") {
+            // Phase 1 or 2: Reject and increment counter
+            $nextPhase = ($logoutCookie === "yes") ? "1" : "2";
+            setcookie("ipplanNoAuth", $nextPhase, 0, "/");
+
+            Header("WWW-Authenticate: Basic realm=\"$realm\"");
             if ($_SERVER["SERVER_PROTOCOL"]=="HTTP/1.0") {
-               Header("HTTP/1.0 401 Unauthorized");    // http 1.0 method
+               Header("HTTP/1.0 401 Unauthorized");
             }
             else {
-               Header("Status: 401 Unauthorized");     // http 1.1 method
+               Header("Status: 401 Unauthorized");
             }
-            echo $this->message;
+            $this->displayAuthFailurePage();
+            exit();
+        }
+
+        if ($logoutCookie === "2") {
+            // Phase 3: Browser's auto-retries have been rejected, now accept valid credentials
+            if ($this->isAuthenticated() == 1) {
+                // Valid credentials - clear cookie and allow access
+                setcookie("ipplanNoAuth", "", time() - 3600, "/");
+                Header("HTTP/1.0 200 OK");
+                return $this->grps;
+            } else {
+                // Invalid credentials - send 401 again but keep in phase 3
+                Header("WWW-Authenticate: Basic realm=\"$realm\"");
+                if ($_SERVER["SERVER_PROTOCOL"]=="HTTP/1.0") {
+                   Header("HTTP/1.0 401 Unauthorized");
+                }
+                else {
+                   Header("Status: 401 Unauthorized");
+                }
+                $this->displayAuthFailurePage();
+                exit();
+            }
+        }
+
+        // Normal authentication (no logout cookie)
+        if ($this->isAuthenticated() == 0) {
+            Header("WWW-Authenticate: Basic realm=\"$this->realm\"");
+            if ($_SERVER["SERVER_PROTOCOL"]=="HTTP/1.0") {
+               Header("HTTP/1.0 401 Unauthorized");
+            }
+            else {
+               Header("Status: 401 Unauthorized");
+            }
+            $this->displayAuthFailurePage();
             exit();
         }
         else {
@@ -70,8 +114,224 @@ class BasicAuthenticator {
             return $this->grps;
         }
     }
-    
-    
+
+
+    function displayAuthFailurePage() {
+        // Get the base URL for assets
+        $baseUrl = '';
+        if (isset($_SERVER['SCRIPT_NAME'])) {
+            $baseUrl = dirname(dirname($_SERVER['SCRIPT_NAME']));
+            if ($baseUrl == '/' || $baseUrl == '\\') {
+                $baseUrl = '';
+            }
+        }
+
+        // Determine current theme
+        $theme = 'classic';
+        if (isset($_COOKIE['ipplanTheme'])) {
+            $theme = $_COOKIE['ipplanTheme'];
+        }
+
+        // Map theme to CSS file
+        $themeCss = 'default.css';
+        if ($theme == 'current-branch-dark' || $theme == '2026-dark') {
+            $themeCss = 'current-branch-dark.css';
+        } elseif ($theme == 'current-branch-light' || $theme == '2026-light') {
+            $themeCss = 'current-branch-light.css';
+        }
+
+        $isCurrentBranch = ($themeCss != 'default.css');
+        $loginUrl = $baseUrl . '/user/login.php';
+        $homeUrl = $baseUrl . '/index.php';
+
+        if ($isCurrentBranch) {
+            // Current Branch themed page
+            echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Required - IPPlan</title>
+    <link rel="stylesheet" href="' . htmlspecialchars($baseUrl) . '/themes/' . htmlspecialchars($themeCss) . '">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-base, #1a1a2e);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .auth-card {
+            background: var(--bg-card, #16213e);
+            border: 1px solid var(--border-color, #0f3460);
+            border-radius: 12px;
+            padding: 48px;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .auth-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: var(--bg-card-alt, #1a1a2e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--accent-primary, #0097a7);
+        }
+        .auth-title {
+            color: var(--text-primary, #e8e8e8);
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 16px;
+        }
+        .auth-message {
+            color: var(--text-secondary, #a8a8a8);
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0 0 32px;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .auth-buttons a {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+        }
+        .auth-buttons .btn-primary {
+            background: #0097a7;
+            color: #fff;
+        }
+        .auth-buttons .btn-primary:hover {
+            background: #00acc1;
+        }
+        .auth-buttons .btn-secondary {
+            background: transparent;
+            color: #a8a8a8;
+            border: 1px solid #0f3460;
+        }
+        .auth-buttons .btn-secondary:hover {
+            background: #1a1a2e;
+            color: #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <div class="auth-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+        </div>
+        <h1 class="auth-title">Authentication Required</h1>
+        <p class="auth-message">You need to enter a valid user-id and password to access data in this system.</p>
+        <div class="auth-buttons">
+            <a href="' . htmlspecialchars($loginUrl) . '" class="btn-primary" onclick="window.location.href=this.href;return false;">Login</a>
+            <a href="' . htmlspecialchars($homeUrl) . '" class="btn-secondary" onclick="window.location.href=this.href;return false;">Home</a>
+        </div>
+    </div>
+</body>
+</html>';
+        } else {
+            // Classic theme - simpler styled page
+            echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Required - IPPlan</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-card {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .auth-title {
+            color: #333;
+            font-size: 20px;
+            margin: 0 0 16px;
+        }
+        .auth-message {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0 0 24px;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .auth-buttons a {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 13px;
+            text-decoration: none;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .auth-buttons .btn-primary {
+            background: #4a90d9;
+            color: #fff;
+            border-color: #4a90d9;
+        }
+        .auth-buttons .btn-primary:hover {
+            background: #3a7fc8;
+        }
+        .auth-buttons .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        .auth-buttons .btn-secondary:hover {
+            background: #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h1 class="auth-title">Authentication Required</h1>
+        <p class="auth-message">You need to enter a valid user-id and password to access data in this system.</p>
+        <div class="auth-buttons">
+            <a href="' . htmlspecialchars($loginUrl) . '" class="btn-primary" onclick="window.location.href=this.href;return false;">Login</a>
+            <a href="' . htmlspecialchars($homeUrl) . '" class="btn-secondary" onclick="window.location.href=this.href;return false;">Home</a>
+        </div>
+    </div>
+</body>
+</html>';
+        }
+    }
+
+
     function addUser($user, $passwd) {
         $this->users["$user"] = $passwd;
     }

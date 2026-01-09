@@ -1,0 +1,27 @@
+{
+    "enabled": false,
+    "sync_interval_minutes": 60,
+    "last_run": null,
+    "zones": [
+        {
+            "enabled": true,
+            "domain": "example.com",
+            "server": "ns1.example.com",
+            "customer": 1,
+            "type": "forward",
+            "sync_interval_minutes": 30,
+            "last_sync": null,
+            "last_sync_status": null
+        },
+        {
+            "enabled": true,
+            "domain": "1.168.192.in-addr.arpa",
+            "server": "ns1.example.com",
+            "customer": 1,
+            "type": "reverse",
+            "sync_interval_minutes": 60,
+            "last_sync": null,
+            "last_sync_status": null
+        }
+    ]
+}

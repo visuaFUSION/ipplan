@@ -433,17 +433,30 @@ else {
 }
 if (!$recs) {
     if ($search) {  // only display error if searching and no records
+        insert($w,anchor("displaysubnet.php?baseindex=$baseindex", my_("Back to subnet view")));
+        insert($w,block("<p>"));
         myError($w,$p, my_("Search found no matching entries"));
     }
 }
 
-// sanity check if MAXTABLESIZE in config.php is modified on the fly
+// Get dynamic rows per page value
+$rowsPerPage = getRowsPerPage();
+
+// sanity check if page size in config.php is modified on the fly
 // and person has maybe bookmarked paged
-if ($baseaddr+$block*MAXTABLESIZE >= $baseaddr+$maxcnt) {
+if ($baseaddr+$block*$rowsPerPage >= $baseaddr+$maxcnt) {
    myError($w,$p, my_("This page was bookmarked and contains invalid information which cannot be displayed anymore - restart from main menu"));
 }
 
-insert($w,block("<h3>"));
+// Build pagination params for host display
+$paginationParams = "&baseindex=".$baseindex."&showactive=".$showactive."&expr=$expr&search=".urlencode($search);
+
+// Header with subnet info (left) and rows per page dropdown (right)
+// Using display:table to constrain width to match table below
+insert($w,block('<div class="list-header-wrapper" style="display: table; width: auto; min-width: 100%; margin: 10px 0;">'));
+insert($w,block('<div style="display: table-row;">'));
+insert($w,block('<div style="display: table-cell; vertical-align: top;">'));
+insert($w,block("<h3 style='margin: 0;'>"));
 insert($w,textbr(my_("Customer/autonomous system description:")." ".$ds->GetCustomerDescrip($cust)));
 insert($w,text(my_("Subnet:")." ".
                   inet_ntoa($baseaddr)." ".my_("Mask:")." ".
@@ -454,17 +467,15 @@ insert($w,text(my_("Description:")." ".$netdescrip));
 insert($w,block("<small>"));
 insert($w,anchor("modifybase.php?cust=$cust&descrip=".urlencode($netdescrip),my_("Delete/Edit/Modify/Split/Join Subnet")));
 insert($w,block("</small>"));
-/* not all vars available for link
-    insert($w,anchor("modifysubnet.php?baseindex=".$row["baseindex"].
-                     "&areaindex=".$areaindex."&rangeindex=".$rangeindex.
-                     "&cust=".$cust."&descrip=".urlencode($row["descrip"]).
-                     "&ipaddr=".urlencode($ipaddr)."&search=".urlencode($descrip).
-                     "&grp=".urlencode($row["admingrp"]), 
-                     my_("Modify")));
-
-// modifysubnet.php?baseindex=4336&areaindex=0&rangeindex=0&cust=25&descrip=Loopback&ipaddr=127&search=&grp=abcadm
-*/
 insert($w,block("</h3>"));
+insert($w,block('</div>'));
+displayRowsPerPageSelector($w, 'inline');
+insert($w,block('</div></div>'));
+
+// Display record-count based pagination at top (for larger subnets)
+if ($maxcnt > $rowsPerPage) {
+    displayPaginationNav($w, $maxcnt, $block, $paginationParams);
+}
 
 if ($showactive) {
    // increase time limit for scans - will have no effect if safe mode is on
@@ -580,13 +591,13 @@ $rr=new myFetchRow($result, $baseaddr, $maxcnt, empty($search) ? FALSE : TRUE);
 $totcnt=0;
 $vars=""; $anc="";
 // fastforward till first record if not first block of data
-while ($block and $totcnt < $block*MAXTABLESIZE and
+while ($block and $totcnt < $block*$rowsPerPage and
         $row = $rr->FetchRow()) {
-    if ($totcnt % MAXTABLESIZE == 0) {
+    if ($totcnt % $rowsPerPage == 0) {
         $anc=inet_ntoa($row["ipaddr"])." - ";
     }
-    else if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1) {
-        $vars=$_SERVER["PHP_SELF"]."?baseindex=".$baseindex."&block=".floor($totcnt/MAXTABLESIZE)."&showactive=".$showactive."&expr=$expr&search=".urlencode($search);
+    else if ($totcnt % $rowsPerPage == $rowsPerPage-1) {
+        $vars=$_SERVER["PHP_SELF"]."?baseindex=".$baseindex."&block=".floor($totcnt/$rowsPerPage)."&showactive=".$showactive."&expr=$expr&search=".urlencode($search);
         insert($cblk,block(" | "));
         insert($cblk,anchor($vars, $anc.inet_ntoa($row["ipaddr"])));
     }
@@ -595,9 +606,9 @@ while ($block and $totcnt < $block*MAXTABLESIZE and
 
 $ipscan=array();
 if ($showactive and NMAP != "") {
-    $nmapstart=inet_ntoa($baseaddr+($block*MAXTABLESIZE));
-    if ($maxcnt > MAXTABLESIZE) {
-        $nmapend=inet_ntoa($baseaddr+($block*MAXTABLESIZE)+MAXTABLESIZE-1);
+    $nmapstart=inet_ntoa($baseaddr+($block*$rowsPerPage));
+    if ($maxcnt > $rowsPerPage) {
+        $nmapend=inet_ntoa($baseaddr+($block*$rowsPerPage)+$rowsPerPage-1);
     }
     else {
         $nmapend=inet_ntoa($baseaddr+$maxcnt-1);
@@ -789,7 +800,7 @@ while($row = $rr->FetchRow()) {
     $export->addCell($row["userid"]);
     $export->saveRow();
 
-    if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1)
+    if ($totcnt % $rowsPerPage == $rowsPerPage-1)
         break;
     $cnt++;
     $totcnt++;
@@ -817,11 +828,11 @@ $vars="";
 $printed=0;
 while ($row = $rr->FetchRow()) {
     $totcnt++;
-    if ($totcnt % MAXTABLESIZE == 0) {
-        $vars=$_SERVER["PHP_SELF"]."?baseindex=".$baseindex."&block=".floor($totcnt/MAXTABLESIZE)."&showactive=".$showactive."&expr=$expr&search=".urlencode($search);
+    if ($totcnt % $rowsPerPage == 0) {
+        $vars=$_SERVER["PHP_SELF"]."?baseindex=".$baseindex."&block=".floor($totcnt/$rowsPerPage)."&showactive=".$showactive."&expr=$expr&search=".urlencode($search);
         insert($cblk,block(" | "));
         insert($cblk,anchor($vars,
-                    inet_ntoa($row["ipaddr"])." - ".inet_ntoa($baseaddr+$totcnt+MAXTABLESIZE-1)));
+                    inet_ntoa($row["ipaddr"])." - ".inet_ntoa($baseaddr+$totcnt+$rowsPerPage-1)));
     }
     if (!empty($vars) and !$printed) {
         insert($ck2,anchor($vars, ">>"));
@@ -830,8 +841,8 @@ while ($row = $rr->FetchRow()) {
 }
 // $cblk will not exist if only a host - stats area not drawn
 if ($maxcnt > 1) {
-    //if ($maxcnt > MAXTABLESIZE) {
-    if ($printed or $totcnt/MAXTABLESIZE > 1) {
+    //if ($maxcnt > $rowsPerPage) {
+    if ($printed or $totcnt/$rowsPerPage > 1) {
         insert($cblk,block(" |"));
     }
     insert($cblk,block("<p>"));
@@ -850,6 +861,14 @@ if ($block > 0) {
 insert($ck1,textb(my_("IP address")));
 
 $result->Close();
+
+// Display record-count based pagination at bottom (for larger subnets)
+if ($maxcnt > $rowsPerPage) {
+    displayPaginationNav($w, $maxcnt, $block, $paginationParams);
+}
+
+// Bottom footer with rows per page dropdown
+displayListFooter($w, '');
 
 // create the export view form
 $expression = $export->translateExpr($expr);

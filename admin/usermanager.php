@@ -42,6 +42,7 @@ $myWwwPath='../menus/';
 $w=myheading($p,my_("User Manager"));
 insert($w, generic("link",array("rel"=>"stylesheet","href"=>"$myWwwPath"."layerstreemenu.css")));
 insert($w, generic("link",array("rel"=>"stylesheet","href"=>"$myWwwPath"."layerstreemenu-hidden.css")));
+insert($w, script("",array("language"=>"JavaScript","type"=>"text/javascript","src"=> $myWwwPath . 'libjs/layersmenu-browser_detection.js')));
 insert($w, script("",array("language"=>"JavaScript","type"=>"text/javascript","src"=> $myWwwPath . 'libjs/layerstreemenu-cookies.js')));
 
 //Make this a stylesheet soon.

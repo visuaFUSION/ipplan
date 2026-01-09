@@ -1,4 +1,7 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // IPplan v4.92b
 // Aug 24, 2001
@@ -49,6 +52,7 @@ $w=myheading($p, $title, true);
 list($action, $dataid, $cust, $serialdate, $serialnum, $domain, $hname, $responsiblemail, $ttl, $refresh, $retry, $expire, $minimum, $zonepath, $seczonepath, $descrip, $slaveonly, $block, $server, $expr, $ipplanParanoid, $clone) = myRegister("S:action I:dataid I:cust I:serialdate I:serialnum S:domain A:hname S:responsiblemail I:ttl I:refresh I:retry I:expire I:minimum S:zonepath S:seczonepath S:descrip S:slaveonly I:block S:server S:expr I:ipplanParanoid S:clone");
 list($userfld) = myRegister("A:userfld");  // for template fields
 list($createyear, $createmonth, $createday, $expireyear, $expiremonth, $expireday, $regyear, $regmonth, $regday) = myRegister("I:createyear I:createmonth I:createday I:expireyear I:expiremonth I:expireday I:regyear I:regmonth I:regday");
+list($sync_enabled, $sync_server, $sync_interval) = myRegister("S:sync_enabled S:sync_server I:sync_interval");
 
 // save the last customer used
 // must set path else Netscape gets confused!
@@ -106,6 +110,133 @@ if ($action=="delete") {
     }
 }
 // ##################### END OF DELETE ##############################
+
+// ##################### Start OF SYNC ##############################
+if ($action=="sync") {
+    // Debug output
+    insert($w,textbr(my_("=== DEBUG: Starting Sync ===")));
+    insert($w,textbr(sprintf("Domain: %s, Customer: %d, DataID: %d", $domain, $cust, $dataid)));
+
+    // check if user belongs to customer admin group
+    $result=$ds->GetCustomerGrp($cust);
+    $row = $result->FetchRow();
+    if (!in_array($row["admingrp"], $grps)) {
+        myError($w,$p, my_("You may not sync a DNS zone as you are not a member of the customers admin group"));
+    }
+
+    // Load sync config to get the server
+    $syncConfigFile = dirname(__FILE__) . '/../data/dns-sync-config.json';
+    insert($w,textbr(sprintf("Config file path: %s", $syncConfigFile)));
+    insert($w,textbr(sprintf("Config file exists: %s", file_exists($syncConfigFile) ? "YES" : "NO")));
+
+    $syncConfig = array('enabled' => false, 'zones' => array());
+    $zoneSyncConfig = null;
+    $syncServerToUse = '';
+
+    if (file_exists($syncConfigFile)) {
+        $syncConfigJson = file_get_contents($syncConfigFile);
+        insert($w,textbr(sprintf("Config file contents: %s", htmlspecialchars(substr($syncConfigJson, 0, 500)))));
+        if ($syncConfigJson) {
+            $syncConfig = json_decode($syncConfigJson, true);
+            if ($syncConfig === null) {
+                insert($w,textbr(sprintf("JSON decode error: %s", json_last_error_msg())));
+            }
+        }
+    }
+
+    // Find this zone's config
+    insert($w,textbr(sprintf("Number of zones in config: %d", isset($syncConfig['zones']) ? count($syncConfig['zones']) : 0)));
+
+    if (isset($syncConfig['zones'])) {
+        foreach ($syncConfig['zones'] as &$zc) {
+            insert($w,textbr(sprintf("Checking zone: %s (customer %s) against %s (customer %d)",
+                isset($zc['domain']) ? $zc['domain'] : 'N/A',
+                isset($zc['customer']) ? $zc['customer'] : 'N/A',
+                $domain, $cust)));
+            if (isset($zc['domain']) && $zc['domain'] === $domain &&
+                isset($zc['customer']) && $zc['customer'] == $cust) {
+                $zoneSyncConfig = &$zc;
+                $syncServerToUse = isset($zc['server']) ? $zc['server'] : '';
+                insert($w,textbr(sprintf("MATCH FOUND! Server: %s", $syncServerToUse)));
+                break;
+            }
+        }
+        unset($zc);
+    }
+
+    if (empty($syncServerToUse)) {
+        insert($w,textbr("ERROR: No sync server found in config"));
+        myError($w,$p, my_("No sync server configured for this zone. Please edit the zone and configure the sync server first."));
+    }
+
+    // Get zone info for the sync
+    $zoneRow = $ds->ds->GetRow("SELECT domain, slaveonly, serialdate, serialnum
+        FROM fwdzone WHERE customer=$cust AND data_id=$dataid");
+
+    if (!$zoneRow) {
+        myError($w,$p, my_("Zone not found"));
+    }
+
+    // Perform the zone transfer
+    $ds->domain = $zoneRow['domain'];
+    $ds->cust = $cust;
+    $ds->SetSerial($zoneRow['serialdate'], $zoneRow['serialnum']);
+
+    insert($w,textbr(sprintf(my_("Performing zone transfer for %s from %s..."), $domain, $syncServerToUse)));
+
+    $answer = $ds->ZoneAXFR($domain, $syncServerToUse);
+
+    if ($ds->err > 0) {
+        // Update sync status in config
+        if ($zoneSyncConfig !== null) {
+            $zoneSyncConfig['last_sync'] = date('Y-m-d H:i:s');
+            $zoneSyncConfig['last_sync_status'] = 'failed';
+            file_put_contents($syncConfigFile, json_encode($syncConfig, JSON_PRETTY_PRINT));
+        }
+        $formerror .= sprintf(my_("Zone transfer failed: %s"), $ds->errstr) . "\n";
+    } else {
+        // Update SOA
+        $ds->Serial();
+        $updateResult = $ds->ds->Execute("UPDATE fwdzone SET
+            serialdate = " . $ds->ds->qstr($ds->serialdate) . ",
+            serialnum = " . $ds->serialnum . ",
+            ttl = " . $ds->ttl . ",
+            refresh = " . $ds->refresh . ",
+            retry = " . $ds->retry . ",
+            expire = " . $ds->expire . ",
+            minimum = " . $ds->minimum . ",
+            responsiblemail = " . $ds->ds->qstr($ds->responsiblemail) . ",
+            lastmod = " . $ds->ds->DBTimeStamp(time()) . ",
+            error_message = " . $ds->ds->qstr("E") . ",
+            userid = " . $ds->ds->qstr(getAuthUsername()) . "
+            WHERE data_id = $dataid");
+
+        // If not slave-only, update records
+        if ($zoneRow['slaveonly'] != 'Y' && !empty($answer)) {
+            $ds->ds->Execute("DELETE FROM fwdzonerec WHERE data_id = $dataid");
+            $ds->FwdZoneAddRR($dataid, $answer);
+            insert($w,textbr(my_("Zone records updated from DNS server")));
+        }
+
+        // Update sync status in config
+        if ($zoneSyncConfig !== null) {
+            $zoneSyncConfig['last_sync'] = date('Y-m-d H:i:s');
+            $zoneSyncConfig['last_sync_status'] = 'success';
+            file_put_contents($syncConfigFile, json_encode($syncConfig, JSON_PRETTY_PRINT));
+        }
+
+        $ds->AuditLog(array("event"=>115, "action"=>"sync forward zone", "cust"=>$cust,
+                    "user"=>getAuthUsername(), "domain"=>$domain, "id"=>$dataid,
+                    "server"=>$syncServerToUse));
+
+        insert($w,textbr(sprintf(my_("Zone %s synchronized successfully from %s"), $domain, $syncServerToUse)));
+
+        if (!empty($ds->errstr)) {
+            $formerror .= $ds->errstr;
+        }
+    }
+}
+// ##################### END OF SYNC ##############################
 
 // ##################### Start OF checks ##############################
 if ($action=="add" or $action=="edit") {
@@ -217,6 +348,9 @@ if ($action=="add" or $action=="edit") {
 // ##################### Start OF Add ##############################
 if ($action=="add") {
 
+    // Register error handler for potential memory/timeout issues during zone transfer
+    registerResourceErrorHandler();
+
     // loop through array - each element is a domain to add
     foreach($muldomains as $domain) {
         $domain=trim($domain);
@@ -303,6 +437,80 @@ if ($action=="edit") {
 
         $ds->DbfTransactionEnd();
         insert($w,textbr(my_("DNS Zone Modified")));
+
+        // Save sync configuration to JSON file
+        if (!empty($sync_server) || $sync_enabled == "on") {
+            $syncConfigFile = dirname(__FILE__) . '/../data/dns-sync-config.json';
+            $syncConfig = array('enabled' => true, 'sync_interval_minutes' => 60, 'zones' => array());
+
+            // Load existing config
+            if (file_exists($syncConfigFile)) {
+                $existingJson = file_get_contents($syncConfigFile);
+                if ($existingJson) {
+                    $existingConfig = json_decode($existingJson, true);
+                    if ($existingConfig) {
+                        $syncConfig = $existingConfig;
+                    }
+                }
+            }
+
+            // Ensure zones array exists
+            if (!isset($syncConfig['zones'])) {
+                $syncConfig['zones'] = array();
+            }
+
+            // Find or create zone config
+            $zoneFound = false;
+            foreach ($syncConfig['zones'] as &$zc) {
+                if (isset($zc['domain']) && $zc['domain'] === $domain &&
+                    isset($zc['customer']) && $zc['customer'] == $cust) {
+                    // Update existing zone config
+                    $zc['enabled'] = ($sync_enabled == "on");
+                    $zc['server'] = $sync_server;
+                    $zc['sync_interval_minutes'] = $sync_interval > 0 ? $sync_interval : 60;
+                    $zc['type'] = 'forward';
+                    $zoneFound = true;
+                    break;
+                }
+            }
+            unset($zc);
+
+            if (!$zoneFound) {
+                // Add new zone config
+                $syncConfig['zones'][] = array(
+                    'enabled' => ($sync_enabled == "on"),
+                    'domain' => $domain,
+                    'server' => $sync_server,
+                    'customer' => $cust,
+                    'type' => 'forward',
+                    'sync_interval_minutes' => $sync_interval > 0 ? $sync_interval : 60,
+                    'last_sync' => null,
+                    'last_sync_status' => null
+                );
+            }
+
+            // Enable global sync if any zone is enabled
+            $hasEnabledZone = false;
+            foreach ($syncConfig['zones'] as $zc) {
+                if (isset($zc['enabled']) && $zc['enabled']) {
+                    $hasEnabledZone = true;
+                    break;
+                }
+            }
+            $syncConfig['enabled'] = $hasEnabledZone;
+
+            // Save config
+            $dataDir = dirname(__FILE__) . '/../data';
+            if (!is_dir($dataDir)) {
+                @mkdir($dataDir, 0755, true);
+            }
+            file_put_contents($syncConfigFile, json_encode($syncConfig, JSON_PRETTY_PRINT));
+
+            if ($sync_enabled == "on" && !empty($sync_server)) {
+                insert($w,textbr(sprintf(my_("Sync configuration saved: will sync from %s every %d minutes"),
+                    $sync_server, $sync_interval > 0 ? $sync_interval : 60)));
+            }
+        }
     }
     else {
         $ds->DbfTransactionRollback();
@@ -415,16 +623,31 @@ $srch->expr=$expr;
 $srch->expr_disp=TRUE;
 $srch->Search();  // draw the sucker!
 
+// Get dynamic rows per page value
+$rowsPerPage = getRowsPerPage();
+
+// Count total records for pagination display
+$totalRecords = 0;
+$countResult = $ds->ds->Execute("SELECT COUNT(*) as cnt FROM fwdzone WHERE customer=$cust");
+if ($countRow = $countResult->FetchRow()) {
+    $totalRecords = (int)$countRow['cnt'];
+}
+
+// Build base params for pagination links
+$paginationParams = "&domain=".urlencode($domain)."&cust=".$cust."&expr=$expr&descrip=".urlencode($descrip);
+
 $totcnt=0;
-$vars="";
 // fastforward till first record if not first block of data
-while ($block and $totcnt < $block*MAXTABLESIZE and
+while ($block and $totcnt < $block*$rowsPerPage and
        $row = $result->FetchRow()) {
-    $vars=DisplayBlock($w, $row, $totcnt, "&domain=".urlencode($domain)."&cust=".$cust.
-                   "&expr=$expr&descrip=".urlencode($descrip), "domain");
     $totcnt++;
 }
-insert($w,block("<p>"));
+
+// Header row with title (left) and rows per page dropdown (right)
+displayListHeader($w, my_("DNS Forward Zones"));
+
+// Display record-count based pagination at top
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
 
 // create a table
 insert($w,$t = table(array("cols"=>"12",
@@ -432,8 +655,6 @@ insert($w,$t = table(array("cols"=>"12",
 // draw heading
 setdefault("cell",array("class"=>"heading"));
 insert($t,$c = cell());
-if (!empty($vars))
-    insert($c,anchor($vars, "<<"));
 insert($c,text(my_("Domain")));
 insert($t,$c = cell());
 insert($c,text(my_("Primary NS")));
@@ -584,36 +805,39 @@ setdefault("cell",array("class"=>color_flip_flop()));
     insert($c,block(" | "));
     insert($c,anchor("whois.php?lookup=".urlencode($row["domain"]),
                 my_("Whois")));
+    insert($c,block(" | "));
+    insert($c,anchor($_SERVER["PHP_SELF"]."?cust=$cust&dataid=".$row["data_id"].
+                "&action=sync&domain=".urlencode($row["domain"]),
+                my_("Sync"),
+                array("onclick"=>"return confirm('".my_("Perform zone transfer now?")."')")));
 
     insert($c,block("</small>"));
-    
-    if ($totcnt % MAXTABLESIZE == MAXTABLESIZE-1)
+
+    if ($totcnt % $rowsPerPage == $rowsPerPage-1)
         break;
     $cnt++;
     $totcnt++;
 }
 
-insert($w,block("<p>"));
-
-$vars="";
-$printed=0;
+// Skip remaining records (we already have total count)
 while ($row = $result->FetchRow()) {
     $totcnt++;
-    $vars=DisplayBlock($w, $row, $totcnt, "&domain=".urlencode($domain)."&cust=".$cust.
-                "&expr=$expr&descrip=".urlencode($descrip), "domain" );
-    if (!empty($vars) and !$printed) {
-        insert($ck,anchor($vars, ">>"));
-        $printed=1;
-    }
 }
-insert($w,block("<p>"));
 
+// Display record-count based pagination at bottom
+displayPaginationNav($w, $totalRecords, $block, $paginationParams);
+
+// Bottom footer with export link (left) and rows per page dropdown (right)
+$footerLeftContent = '';
 if ($cnt) {
-    insert($w,anchor($_SERVER["PHP_SELF"]."?cust=$cust&dataid=0&action=export",
-                my_("Export all changed DNS Zones"),
-                $ipplanParanoid ? array("onclick"=>"return confirm('".my_("Are you sure to Export?")."')") : FALSE));
+    $confirmAttr = $ipplanParanoid ? ' onclick="return confirm(\'' . my_("Are you sure to Export?") . '\');"' : '';
+    $footerLeftContent = '<a href="' . $_SERVER["PHP_SELF"] . '?cust=' . $cust . '&dataid=0&action=export"' . $confirmAttr . '>' . my_("Export all changed DNS Zones") . '</a>';
 }
-else {
+displayListFooter($w, $footerLeftContent);
+
+if (!$cnt) {
+    insert($w,anchor("modifydnsform.php?cust=$cust", my_("Back to search form")));
+    insert($w,block("<p>"));
     myError($w,$p, my_("Search found no DNS Zone entries"), FALSE);
 }
 

@@ -82,7 +82,7 @@ class Net_DNS_RR_SRV extends Net_DNS_RR
 
     /* }}} */
     /* Net_DNS_RR_SRV::rr_rdata($packet, $offset) {{{ */
-    function rr_rdata($packet, $offset)
+    function rr_rdata(&$packet, $offset)
     {
         if ($this->preference) {
             $rdata = pack('nnn', $this->preference, $this->weight, $this->port);

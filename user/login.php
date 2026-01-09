@@ -1,7 +1,7 @@
 <?php
 
 // IPplan
-// Nov 20, 2004
+// Jan 8, 2026
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
 
-// Set cookie to force re-authentication on next protected page access
-setcookie("ipplanNoAuth", "yes", 0, "/");
+// Do NOT clear the logout cookie here - let authenticate() handle it.
+// If cookie is set, authenticate() will force re-prompt for credentials.
+// If cookie is not set, authenticate() will check if user has valid credentials.
 
-// Redirect to home page - sidebar will show "Not Logged In" due to cookie
-Header("Location: ../index.php");
+// Redirect to dashboard.php which requires authentication
+Header("Location: ../dashboard.php");
 exit();
 ?>

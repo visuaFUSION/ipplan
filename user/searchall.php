@@ -54,15 +54,24 @@ if (!$_GET) {
 
 if (strlen($search) < 3) {
    if ($field == "template" and $tmplfield == "any") {
+      insert($w,block("<p>"));
+      insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+      insert($w,block("<p>"));
       myError($w,$p, my_("You need to enter a longer search criteria, or select a specific template"));
    } else if ($field != "template") {
+      insert($w,block("<p>"));
+      insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+      insert($w,block("<p>"));
       myError($w,$p, my_("You need to enter a longer search criteria."));
    }
 }
-if ($field != "userinf" and $field != "location" and 
+if ($field != "userinf" and $field != "location" and
     $field != "telno" and $field != "descrip" and
     $field != "hname" and $field != "macaddr" and
     $field != "template" and $field != "any") {
+   insert($w,block("<p>"));
+   insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+   insert($w,block("<p>"));
    myError($w,$p, my_("Invalid search field."));
 }
 if ($day == 0 or $month == 0 or $year == 0) {
@@ -70,6 +79,9 @@ if ($day == 0 or $month == 0 or $year == 0) {
 }
 else {
    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+      insert($w,block("<p>"));
+      insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+      insert($w,block("<p>"));
       myError($w,$p, my_("Invalid search date."));
    }
    $usedate=TRUE;
@@ -80,6 +92,9 @@ if ($field=="macaddr") {
     if (preg_match('/^[a-f0-9A-F]*$/', $search) and strlen($search) <= 12) {
     }
     else {
+        insert($w,block("<p>"));
+        insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+        insert($w,block("<p>"));
         myError($w,$p, sprintf(my_("Invalid MAC address: %s"), $oldmacaddr)."\n");
     }
 }
@@ -373,6 +388,8 @@ setdefault("cell",array("class"=>color_flip_flop()));
 insert($w,block("<p>"));
 
 if (!$cnt) {
+   insert($w,anchor("searchallform.php?cust=$cust", my_("Back to search form")));
+   insert($w,block("<p>"));
    myError($w,$p, my_("Search found no matching entries"));
 }
 

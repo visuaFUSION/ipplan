@@ -1,14 +1,14 @@
-# IPplan
+# IPplan Current Branch
 
-**A modernized continuation of IPplan for PHP 8.x**
+**A modernized continuation of IPplan for PHP 8.x and the constantly evolving security landscape**
 
-IPplan is a web-based, multilingual IP address management (IPAM) and tracking tool, updated to run on modern PHP environments.  This project revives and maintains the classic IPplan codebase for organizations that depend on this proven IPAM solution.
+IPplan Current Branch is a web-based, multilingual IP address management (IPAM) and tracking tool, currently maintained by visuaFUSION Systems Solutions. This project was started to breathe new life into the proven IPplan IPAM platform after more than a decade of stagnation with the original project. Thanks to the power of open-source software, we were able to revive IPplan, modernize its codebase, and bring it up to current security standards. This gives rural health care organizations and other budget-conscious IT teams a reliable, feature-rich IPAM solution without the high licensing costs typically associated with commercial IP address management software.
 
 ---
 
-## About IPplan
+## About IPplan Current Branch
 
-IPplan is a web-based, multilingual IP address management (IPAM) and tracking tool.  Originally written for PHP 4, IPplan has served network administrators worldwide for over two decades.  It goes beyond simple IP address management to include DNS administration, configuration file management, circuit management, and hardware asset tracking -- all customizable via templates.
+IPplan is a web-based, multilingual IP address management (IPAM) and tracking tool. Originally created by Richard Ellerbrock in 2001 and written for PHP 4, IPplan has served network administrators worldwide for over two decades. It goes beyond simple IP address management to include DNS administration, configuration file management, circuit management, and hardware asset tracking, all customizable via templates.
 
 ### Key Features
 
@@ -59,21 +59,29 @@ In January 2016, **Shaun Bugler** of Hetzner (Pty) Ltd (now **xneelo**) imported
 
 - GitHub Archive: https://github.com/xneelo/ipplan
 
-### This Fork (2025)
+### Current Branch (2025)
 
-After more than 13 years without updates, the original IPplan codebase would no longer run on modern PHP versions.  **visuaFUSION LLC**, a healthcare IT managed services provider based in Nebraska, needed a working IPAM solution and chose to modernize IPplan rather than abandon it.
+After more than 13 years without updates, the original IPplan codebase would no longer run on modern PHP versions.
 
-This fork updates IPplan to support PHP 8.2 and modern MySQL/MariaDB while preserving the functionality that made the original so valuable.
+At **visuaFUSION Systems Solutions**, a health care IT company dedicated to helping rural hospitals, clinics, and long term care facilities achieve HIPAA compliant, enterprise-grade IT operations, we kept seeing the same problem: rural health care organizations missing out on the benefits of proper IP address management because commercial IPAM solutions were simply too expensive for rural health care budgets. Our engineers frequently found themselves saying "if only IPplan was still around" when discussing IPAM options for our clients.
+
+Then the team simply asked the obvious question: "Why not revive it? It's open source."
+
+And so IPplan Current Branch was born. By modernizing this proven IPAM platform, we could provide tremendous value to the rural health care organizations our mission exists to serve, while also giving back to the broader IT community that has benefited from open-source software for decades.
+
+Rural health care IT teams are often understaffed and overwhelmed, struggling to maintain control of their environments. Many are still managing IP addresses in outdated spreadsheets that suffer from versioning conflicts, stale data, and no audit trail. IPplan gives these teams a way to finally get organized, properly document their networks, and build a foundation for enterprise-grade IT operations without the enterprise price tag.
+
+IPplan Current Branch updates IPplan to support PHP 8.x and modern MySQL/MariaDB while adding security hardening, a modern UI, and enhanced features, all while preserving the functionality that made the original so valuable and adding quality of life features expected from modern platforms.
 
 ---
 
-## What's New in This Fork
+## What's New in Current Branch
 
 ### Versioning
 
-IPplan-NG uses a date-based versioning system: **YYYY.M.D.R** (Year.Month.Day.Revision)
+IPplan Current Branch uses a date-based versioning system: **YYYY.M.D.R** (Year.Month.Day.Revision)
 
-- Current Release Candidate: **2026.1.8.2**
+- Current Release Candidate: **2026.1.9.4**
 
 This versioning approach provides clear indication of when a release was made and allows for multiple releases on the same day if needed.
 
@@ -174,16 +182,16 @@ The original documentation is copyrighted (c) 2002 Richard E and distributed und
 - PHP Layers Menu System - Menu rendering
 - All translators and contributors listed in the original documentation
 
-### This Fork
+### Current Branch
 
-- **visuaFUSION LLC** - PHP 8.x modernization and ongoing maintenance
+- **visuaFUSION Systems Solutions** - PHP 8.x modernization, security hardening, modern UI, and ongoing maintenance
 - xneelo (formerly Hetzner SA) - GitHub archival of v4.92b
 
 ---
 
-## About visuaFUSION
+## About visuaFUSION Systems Solutions
 
-visuaFUSION Systems Solutions is a healthcare IT company based in Sutherland, Nebraska, specializing in managed services for rural healthcare organizations.  Our mission is "Leveling the IT Playing Field for Rural Health Care Organizations."
+visuaFUSION Systems Solutions is a health care IT company based in Sutherland, Nebraska, dedicated to helping rural hospitals, clinics, and long term care facilities achieve HIPAA compliant, enterprise-grade IT operations with rural health care scale and budgets. Our mission is "Leveling the IT Playing Field for Rural Health Care Organizations."
 
 - Website: https://visuafusion.com
 

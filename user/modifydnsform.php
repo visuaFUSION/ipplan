@@ -45,6 +45,9 @@ isset($_COOKIE["ipplanLanguage"]) && myLanguage($_COOKIE['ipplanLanguage']);
 //setdefault("table",array("cellpadding"=>"0"));
 //setdefault("text",array("size"=>"2"));
 
+// get action early for page title
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
 if ($action=='add') {
     $title=my_("Create DNS Zones");
 }
@@ -130,12 +133,32 @@ insert($con,checkbox(array("name"=>"slaveonly"),
 // if creating new zone, get dns servers from revdns table
 if ($action=="add") {
     // give option of reading zone from existing DNS server via zone transfer
-    insert($con,textbrbr(my_("Zone transfer from DNS server")));
-    insert($con,span(my_("Blank for no zone transfer"), array("class"=>"textSmall")));
-    insert($con,span(my_("Slave zones only import SOA information, not zone records"), array("class"=>"textSmall")));
+    insert($con,textbrbr(my_("Import zone from existing DNS server (optional)")));
+    insert($con,span(my_("Enter a DNS server hostname or IP address to automatically import zone data via AXFR"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,span(my_("Leave blank to create an empty zone and add records manually"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,span(my_("Note: Slave zones only import SOA information, not individual DNS records"), array("class"=>"textSmall")));
+    insert($con,block("<br><br>"));
+
+    // Display PHP settings warning for large zone transfers
+    $memLimit = ini_get('memory_limit');
+    $maxExecTime = ini_get('max_execution_time');
+    $warningStyle = "background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin: 10px 0; font-size: 12px;";
+    $warningHtml = '<div style="' . $warningStyle . '">';
+    $warningHtml .= '<strong style="color: #856404;">' . my_("Large Zone Warning") . '</strong><br>';
+    $warningHtml .= my_("For environments with many DNS records, zone transfers may require additional PHP resources.") . '<br>';
+    $warningHtml .= '<span style="color: #666;">' . my_("Current settings:") . ' ';
+    $warningHtml .= 'memory_limit=' . htmlspecialchars($memLimit) . ', ';
+    $warningHtml .= 'max_execution_time=' . htmlspecialchars($maxExecTime) . 's</span><br>';
+    $warningHtml .= '<span style="color: #666;">' . my_("If you experience timeout or memory errors, contact your administrator to increase these PHP settings.") . '</span>';
+    $warningHtml .= '</div>';
+    insert($con,block($warningHtml));
+
     insert($con,input_text(array("name"=>"server",
-                    "size"=>"30",
-                    "maxlength"=>"30")));
+                    "placeholder"=>my_("e.g., ns1.example.com or 192.168.1.1"),
+                    "size"=>"50",
+                    "maxlength"=>"253")));
 
     $result2=&$ds->ds->Execute("SELECT hname,horder
             FROM revdns
@@ -404,6 +427,85 @@ insert($con,input_text(array("name"=>"seczonepath",
                            "value"=>"$seczonepath",
                            "size"=>"80",
                            "maxlength"=>"254")));
+
+// Scheduled Sync Configuration (only for edit mode)
+if ($action == 'edit') {
+    insert($f, $con=container("fieldset",array("class"=>"fieldset")));
+    insert($con, $legend=container("legend",array("class"=>"legend")));
+    insert($legend, text(my_("Scheduled DNS Sync")));
+
+    // Load current sync config for this zone
+    $syncConfigFile = dirname(__FILE__) . '/../data/dns-sync-config.json';
+    $syncConfig = array('enabled' => false, 'zones' => array());
+    $zoneSyncConfig = null;
+
+    if (file_exists($syncConfigFile)) {
+        $syncConfigJson = file_get_contents($syncConfigFile);
+        if ($syncConfigJson) {
+            $syncConfig = json_decode($syncConfigJson, true);
+            if (!$syncConfig) {
+                $syncConfig = array('enabled' => false, 'zones' => array());
+            }
+        }
+    }
+
+    // Find this zone's config
+    if (isset($syncConfig['zones'])) {
+        foreach ($syncConfig['zones'] as $zc) {
+            if (isset($zc['domain']) && $zc['domain'] === $domain &&
+                isset($zc['customer']) && $zc['customer'] == $cust) {
+                $zoneSyncConfig = $zc;
+                break;
+            }
+        }
+    }
+
+    $syncEnabled = $zoneSyncConfig && isset($zoneSyncConfig['enabled']) && $zoneSyncConfig['enabled'];
+    $syncServer = $zoneSyncConfig && isset($zoneSyncConfig['server']) ? $zoneSyncConfig['server'] : '';
+    $syncInterval = $zoneSyncConfig && isset($zoneSyncConfig['sync_interval_minutes']) ? $zoneSyncConfig['sync_interval_minutes'] : 60;
+    $lastSync = $zoneSyncConfig && isset($zoneSyncConfig['last_sync']) ? $zoneSyncConfig['last_sync'] : null;
+    $lastSyncStatus = $zoneSyncConfig && isset($zoneSyncConfig['last_sync_status']) ? $zoneSyncConfig['last_sync_status'] : null;
+
+    insert($con,textbr(my_("Enable scheduled sync for this zone")));
+    insert($con,span(my_("When enabled, this zone will be periodically synchronized from the specified DNS server via AXFR"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,checkbox(array("name"=>"sync_enabled"),
+                   my_("Enable scheduled sync"),
+                   $syncEnabled ? "on" : ""));
+
+    insert($con,textbrbr(my_("DNS Server to sync from")));
+    insert($con,span(my_("Enter the hostname or IP address of the DNS server to perform zone transfers from"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,input_text(array("name"=>"sync_server",
+                    "value"=>$syncServer,
+                    "placeholder"=>my_("e.g., ns1.example.com or 192.168.1.1"),
+                    "size"=>"30",
+                    "maxlength"=>"100")));
+
+    insert($con,textbrbr(my_("Sync interval (minutes)")));
+    insert($con,input_text(array("name"=>"sync_interval",
+                    "value"=>$syncInterval,
+                    "size"=>"5",
+                    "maxlength"=>"5")));
+
+    // Show last sync status
+    if ($lastSync) {
+        insert($con,textbrbr(my_("Last sync")));
+        $statusClass = ($lastSyncStatus === 'success') ? 'textSmall' : 'textSmall';
+        $statusText = $lastSync;
+        if ($lastSyncStatus) {
+            $statusText .= ' (' . ($lastSyncStatus === 'success' ? my_('Success') : my_('Failed')) . ')';
+        }
+        insert($con,span($statusText, array("class"=>$statusClass)));
+    }
+
+    // Sync Now button
+    insert($con,block("<br><br>"));
+    insert($con,anchor("modifydns.php?cust=$cust&dataid=$dataid&action=sync&domain=".urlencode($domain),
+                my_("Sync Now"),
+                array("class"=>"button", "onclick"=>"return confirm('".my_("Perform zone transfer now?")."')")));
+    insert($con,span(" " . my_("Immediately sync this zone from the configured DNS server"), array("class"=>"textSmall")));
+}
 
 insert($f,submit(array("value"=>my_("Save"))));
 insert($f,freset(array("value"=>my_("Clear"))));

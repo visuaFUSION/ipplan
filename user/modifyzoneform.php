@@ -154,12 +154,32 @@ insert($con,selectbox(array("4"=>"255.255.255.252/30 - 4 hosts",
 // if creating new zone, get dns servers from revdns table
 if ($action=="add") {
     // give option of reading zone from existing DNS server via zone transfer
-    insert($con,textbrbr(my_("Zone transfer from DNS server")));
-    insert($con,span(my_("Blank for no zone transfer"), array("class"=>"textSmall")));
-    insert($con,span(my_("Slave zones only import SOA information, not zone records"), array("class"=>"textSmall")));
+    insert($con,textbrbr(my_("Import zone from existing DNS server (optional)")));
+    insert($con,span(my_("Enter a DNS server hostname or IP address to automatically import zone data via AXFR"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,span(my_("Leave blank to create an empty zone and add records manually"), array("class"=>"textSmall")));
+    insert($con,block("<br>"));
+    insert($con,span(my_("Note: Slave zones only import SOA information, not individual DNS records"), array("class"=>"textSmall")));
+    insert($con,block("<br><br>"));
+
+    // Display PHP settings warning for large zone transfers
+    $memLimit = ini_get('memory_limit');
+    $maxExecTime = ini_get('max_execution_time');
+    $warningStyle = "background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin: 10px 0; font-size: 12px;";
+    $warningHtml = '<div style="' . $warningStyle . '">';
+    $warningHtml .= '<strong style="color: #856404;">' . my_("Large Zone Warning") . '</strong><br>';
+    $warningHtml .= my_("For environments with many DNS records, zone transfers may require additional PHP resources.") . '<br>';
+    $warningHtml .= '<span style="color: #666;">' . my_("Current settings:") . ' ';
+    $warningHtml .= 'memory_limit=' . htmlspecialchars($memLimit) . ', ';
+    $warningHtml .= 'max_execution_time=' . htmlspecialchars($maxExecTime) . 's</span><br>';
+    $warningHtml .= '<span style="color: #666;">' . my_("If you experience timeout or memory errors, contact your administrator to increase these PHP settings.") . '</span>';
+    $warningHtml .= '</div>';
+    insert($con,block($warningHtml));
+
     insert($con,input_text(array("name"=>"server",
-                    "size"=>"30",
-                    "maxlength"=>"30")));
+                    "placeholder"=>my_("e.g., ns1.example.com or 192.168.1.1"),
+                    "size"=>"50",
+                    "maxlength"=>"253")));
 
     $result2=&$ds->ds->Execute("SELECT hname 
             FROM revdns

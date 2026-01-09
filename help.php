@@ -101,6 +101,7 @@ $adminNavItems = array(
     'import-export' => 'Import/Export',
     'maintenance' => 'Maintenance',
     'upgrading' => 'Upgrading',
+    'custom-branding' => 'Custom Branding',
     'planned-enhancements' => 'Planned Enhancements',
     'troubleshooting' => 'Troubleshooting',
     'faq' => 'Admin FAQ'
@@ -146,7 +147,7 @@ $navHtml .= '</div>';
 newhtml($p);
 $w = myheading($p, my_("Help Documentation"));
 
-// Add CSS for help layout
+// Add CSS for help layout - uses CSS variables for theme compatibility
 $css = <<<'CSS'
 <style>
 .help-container {
@@ -156,25 +157,25 @@ $css = <<<'CSS'
 }
 .help-nav {
     min-width: 220px;
-    background: #f5f5f5;
+    background: var(--bg-card, #f5f5f5);
     padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
+    border-radius: var(--radius-lg, 5px);
+    border: 1px solid var(--border-color, #ddd);
 }
 .help-nav h3 {
     margin-top: 0;
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #ccc;
-    color: #333;
+    border-bottom: 1px solid var(--border-color, #ccc);
+    color: var(--text-primary, #333);
     font-size: 14px;
 }
 .help-nav h3 a.nav-section-link {
-    color: #333;
+    color: var(--text-primary, #333);
     text-decoration: none;
 }
 .help-nav h3 a.nav-section-link:hover {
-    color: #0066cc;
+    color: var(--accent-primary, #0066cc);
     text-decoration: underline;
 }
 .help-nav ul {
@@ -186,7 +187,7 @@ $css = <<<'CSS'
     padding: 4px 0;
 }
 .help-nav li a {
-    color: #0066cc;
+    color: var(--accent-light, #0066cc);
     text-decoration: none;
     font-size: 13px;
 }
@@ -195,47 +196,53 @@ $css = <<<'CSS'
 }
 .help-nav li.active a {
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary, #333);
 }
 .help-content {
     flex: 1;
-    background: #fff;
+    background: var(--bg-card, #fff);
     padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: var(--radius-lg, 5px);
     overflow-x: auto;
+    color: var(--text-primary, #333);
 }
 .help-content h1 {
     margin-top: 0;
-    color: #333;
-    border-bottom: 2px solid #0066cc;
+    color: var(--text-primary, #333);
+    border-bottom: 2px solid var(--accent-primary, #0066cc);
     padding-bottom: 10px;
 }
 .help-content h2 {
-    color: #444;
+    color: var(--text-primary, #444);
     margin-top: 25px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color, #ddd);
     padding-bottom: 5px;
 }
 .help-content h3 {
-    color: #555;
+    color: var(--text-secondary, #555);
     margin-top: 20px;
 }
+.help-content p {
+    color: var(--text-secondary, #333);
+}
 .help-content pre {
-    background: #f8f8f8;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    background: var(--bg-card-alt, #f8f8f8);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: var(--radius-md, 4px);
     padding: 10px;
     overflow-x: auto;
     font-family: 'Courier New', monospace;
     font-size: 13px;
+    color: var(--text-primary, #333);
 }
 .help-content code {
-    background: #f0f0f0;
+    background: var(--bg-card-alt, #f0f0f0);
     padding: 2px 5px;
     border-radius: 3px;
     font-family: 'Courier New', monospace;
     font-size: 13px;
+    color: var(--text-primary, #333);
 }
 .help-content pre code {
     background: transparent;
@@ -247,34 +254,38 @@ $css = <<<'CSS'
     margin: 15px 0;
 }
 .help-content th, .help-content td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color, #ddd);
     padding: 8px 12px;
     text-align: left;
+    color: var(--text-secondary, #333);
 }
 .help-content th {
-    background: #f5f5f5;
+    background: var(--bg-card-alt, #f5f5f5);
+    color: var(--text-primary, #333);
 }
 .help-content tr:nth-child(even) {
-    background: #fafafa;
+    background: var(--bg-hover, #fafafa);
 }
 .help-content a {
-    color: #0066cc;
+    color: var(--accent-light, #0066cc);
 }
 .help-content ul, .help-content ol {
     padding-left: 25px;
+    color: var(--text-secondary, #333);
 }
 .help-content li {
     margin: 5px 0;
 }
 .help-content blockquote {
-    border-left: 4px solid #0066cc;
+    border-left: 4px solid var(--accent-primary, #0066cc);
     margin: 15px 0;
     padding: 10px 20px;
-    background: #f9f9f9;
+    background: var(--bg-card-alt, #f9f9f9);
+    color: var(--text-secondary, #333);
 }
 .help-content hr {
     border: none;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color, #ddd);
     margin: 20px 0;
 }
 </style>

@@ -1,0 +1,1116 @@
+/* IPplan 2026 Dark Theme
+ * Clean professional dark UI inspired by visuaFUSION
+ */
+
+/* ============================================
+   CSS Variables for consistent theming
+   ============================================ */
+:root {
+    /* Background colors - navy/slate palette */
+    --bg-body: #1a2332;
+    --bg-sidebar: #1e2738;
+    --bg-card: #212d3d;
+    --bg-card-alt: #263141;
+    --bg-input: #1a2332;
+    --bg-hover: rgba(255,255,255,0.05);
+    --bg-active: rgba(0,188,212,0.1);
+
+    /* Border colors */
+    --border-color: rgba(255,255,255,0.08);
+    --border-light: rgba(255,255,255,0.05);
+    --border-input: rgba(255,255,255,0.12);
+
+    /* Text colors */
+    --text-primary: #ffffff;
+    --text-secondary: #b0bec5;
+    --text-muted: #78909c;
+    --text-faint: #546e7a;
+
+    /* Accent colors - cyan/teal */
+    --accent-primary: #00bcd4;
+    --accent-light: #4dd0e1;
+    --accent-dark: #0097a7;
+    --accent-bg: rgba(0,188,212,0.15);
+    --accent-border: rgba(0,188,212,0.4);
+
+    /* Status colors */
+    --success-color: #4caf50;
+    --success-light: #81c784;
+    --success-bg: rgba(76,175,80,0.15);
+    --success-border: rgba(76,175,80,0.4);
+
+    --warning-color: #ffc107;
+    --warning-light: #ffd54f;
+    --warning-bg: rgba(255,193,7,0.15);
+    --warning-border: rgba(255,193,7,0.4);
+
+    --error-color: #f44336;
+    --error-light: #e57373;
+    --error-bg: rgba(244,67,54,0.15);
+    --error-border: rgba(244,67,54,0.4);
+
+    /* Sizing */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --radius-pill: 50px;
+
+    --sidebar-width: 240px;
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ============================================
+   Base styles
+   ============================================ */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-body);
+}
+
+/* ============================================
+   Layout structure
+   ============================================ */
+.ipplan-app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.ipplan-sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow: visible;
+    z-index: 100;
+}
+
+/* Scrollable nav wrapper - allows submenus to escape while nav scrolls */
+.ipplan-sidebar-nav-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: visible;
+}
+
+.ipplan-sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ipplan-sidebar-logo-img {
+    max-width: 160px;
+    max-height: 40px;
+    height: auto;
+    width: auto;
+}
+
+.ipplan-sidebar-logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--accent-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--accent-primary);
+}
+
+.ipplan-sidebar-logo-text {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.ipplan-sidebar-logo-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Logo link - makes entire logo clickable to home */
+.ipplan-sidebar-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.15s ease;
+}
+
+.ipplan-sidebar-logo-link:hover {
+    opacity: 0.8;
+}
+
+/* Sidebar section headers */
+.ipplan-sidebar-section {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-primary);
+    padding: 20px 16px 8px;
+}
+
+/* Sidebar navigation */
+.ipplan-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+/* Nav item icon */
+.ipplan-sidebar-nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    opacity: 0.7;
+}
+
+.ipplan-sidebar-nav-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Nav item label */
+.ipplan-sidebar-nav-label {
+    flex: 1;
+}
+
+.ipplan-sidebar-nav a,
+.ipplan-sidebar-nav-item {
+    text-decoration: none;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+    font-size: 14px;
+}
+
+.ipplan-sidebar-nav a:hover,
+.ipplan-sidebar-nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.ipplan-sidebar-nav a:hover .ipplan-sidebar-nav-icon,
+.ipplan-sidebar-nav-item:hover .ipplan-sidebar-nav-icon {
+    opacity: 1;
+}
+
+.ipplan-sidebar-nav a.active,
+.ipplan-sidebar-nav-item.active {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    border-left-color: var(--accent-primary);
+    font-weight: 500;
+}
+
+.ipplan-sidebar-nav a.active .ipplan-sidebar-nav-icon,
+.ipplan-sidebar-nav-item.active .ipplan-sidebar-nav-icon {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+.ipplan-sidebar-nav-badge {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Sidebar nav chevron indicator */
+.ipplan-sidebar-nav-chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 6px;
+    transition: transform 0.15s ease;
+}
+
+/* Sidebar dropdown container */
+.ipplan-sidebar-nav-dropdown {
+    position: static;
+}
+
+/* Submenu popout - uses fixed positioning to escape overflow clipping */
+.ipplan-sidebar-submenu {
+    position: fixed;
+    left: var(--sidebar-width);
+    min-width: 220px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 8px 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-8px);
+    transition: all 0.15s ease;
+    z-index: 9999;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.ipplan-sidebar-nav-dropdown:hover .ipplan-sidebar-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.ipplan-sidebar-nav-dropdown:hover .ipplan-sidebar-nav-chevron {
+    transform: rotate(90deg);
+}
+
+/* Submenu items */
+.ipplan-sidebar-submenu-item {
+    display: block;
+    padding: 10px 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+.ipplan-sidebar-submenu-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.ipplan-sidebar-submenu-item.active {
+    color: var(--accent-primary);
+}
+
+/* Submenu divider */
+.ipplan-sidebar-submenu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 16px;
+}
+
+/* Sidebar user box */
+.ipplan-sidebar-userbox {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.15);
+}
+
+.ipplan-sidebar-userbox-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ipplan-sidebar-userbox-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.ipplan-sidebar-userbox-buttons {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.ipplan-sidebar-version {
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Main content area */
+.ipplan-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    background: var(--bg-body);
+}
+
+/* Top header bar */
+.ipplan-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ipplan-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    gap: 16px;
+}
+
+.ipplan-header-title-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.ipplan-header-breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.ipplan-header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ipplan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Content area */
+.ipplan-content {
+    flex: 1;
+    padding: 24px;
+}
+
+/* ============================================
+   Cards
+   ============================================ */
+.ipplan-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.ipplan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ipplan-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ipplan-card-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Info banner */
+.ipplan-info-banner {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn,
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+    cursor: pointer;
+    border: 1px solid var(--border-input);
+    background: transparent;
+    color: var(--text-primary);
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-family: var(--font-family);
+    font-size: 13px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn:hover,
+button:hover,
+input[type="button"]:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.btn-primary,
+input[type="submit"] {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.btn-primary:hover,
+input[type="submit"]:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+}
+
+.btn-secondary {
+    border-color: var(--text-muted);
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+.btn-danger {
+    border-color: var(--error-color);
+    background: transparent;
+    color: var(--error-light);
+}
+
+.btn-danger:hover {
+    background: var(--error-bg);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* ============================================
+   Form elements
+   ============================================ */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="file"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-input);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    margin-bottom: 12px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--accent-primary);
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+    color: var(--text-muted);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-primary);
+    margin-right: 8px;
+    margin-bottom: 12px;
+}
+
+/* Submit button spacing */
+input[type="submit"],
+button[type="submit"] {
+    margin-top: 8px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+/* ============================================
+   Tables
+   ============================================ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+table.outputtable {
+    background: transparent;
+    border: none;
+}
+
+thead tr,
+tr.heading {
+    background: transparent;
+}
+
+th,
+td.heading {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+}
+
+td {
+    padding: 14px 16px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+}
+
+tr:hover td {
+    background: var(--bg-hover);
+}
+
+td.oddrow {
+    background: transparent;
+}
+
+td.evenrow {
+    background: transparent;
+}
+
+td.redcell {
+    background: var(--error-bg);
+    color: var(--error-light);
+}
+
+td.greencell {
+    background: var(--success-bg);
+    color: var(--success-light);
+}
+
+/* ============================================
+   Links
+   ============================================ */
+a {
+    color: var(--accent-light);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: var(--accent-primary);
+}
+
+a:visited {
+    color: var(--accent-light);
+}
+
+/* Action links in tables */
+.action-link {
+    color: var(--accent-light);
+    font-size: 13px;
+    margin-left: 12px;
+}
+
+.action-link:hover {
+    color: var(--accent-primary);
+}
+
+.action-link-danger {
+    color: var(--error-light);
+}
+
+.action-link-danger:hover {
+    color: var(--error-color);
+}
+
+/* ============================================
+   Legacy class support (existing IPplan classes)
+   ============================================ */
+
+/* Main matte container */
+.matte {
+    background: var(--bg-body);
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Header box - page title area */
+.headerbox {
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+}
+
+.headerbox h1 {
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    display: block;
+    margin: 0;
+}
+
+.headerbox h3 {
+    font-family: var(--font-family);
+    font-size: 20px;
+    font-weight: 700;
+    font-style: normal;
+    color: var(--text-primary);
+    display: block;
+    margin: 4px 0 0 0;
+}
+
+/* Menu box - hidden in sidebar layout */
+.menubox {
+    display: none;
+}
+
+/* Normal box - main content area */
+.normalbox {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin: 0;
+    padding: 20px;
+    overflow: visible;
+}
+
+.normalbox h3 {
+    font-family: var(--font-family);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Footer box */
+.footerbox {
+    padding: 16px 24px;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: left;
+}
+
+/* User box */
+.userbox {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Error box */
+.errorbox {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    color: var(--error-light);
+    font-size: 14px;
+    margin-left: var(--sidebar-width);
+}
+
+/* Fieldset */
+.fieldset {
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card-alt);
+    color: var(--text-primary);
+    overflow: visible;
+}
+
+.legend {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-style: normal;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Text styles */
+.textError {
+    color: var(--error-light);
+    font-weight: 600;
+}
+
+.textErrorBig {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--error-light);
+    padding: 16px;
+    text-align: center;
+}
+
+.textInfo {
+    color: var(--success-light);
+}
+
+.textWarn {
+    color: var(--warning-light);
+}
+
+.textSmall {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* Tabs */
+td.tab {
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    padding: 10px 16px;
+}
+
+table.tabs {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ============================================
+   Status badges / Pills
+   ============================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.badge-success {
+    color: var(--success-light);
+    border: 1px solid var(--success-border);
+    background: var(--success-bg);
+}
+
+.badge-warning {
+    color: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    background: var(--warning-bg);
+}
+
+.badge-error {
+    color: var(--error-light);
+    border: 1px solid var(--error-border);
+    background: var(--error-bg);
+}
+
+.badge-info {
+    color: var(--accent-light);
+    border: 1px solid var(--accent-border);
+    background: var(--accent-bg);
+}
+
+.badge-default {
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    background: var(--bg-hover);
+}
+
+/* Pool badges like visuaFUSION */
+.pool-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-light);
+    margin-right: 6px;
+}
+
+/* ============================================
+   Stats / Dashboard cards
+   ============================================ */
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-value-sm {
+    font-size: 16px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+/* Status indicator */
+.status-active {
+    color: var(--success-light);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-active::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success-color);
+}
+
+.status-inactive {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-inactive::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-faint);
+}
+
+/* ============================================
+   Grid utilities
+   ============================================ */
+.grid {
+    display: grid;
+    gap: 16px;
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* ============================================
+   Scrollbar styling
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-sidebar);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+/* ============================================
+   Responsive adjustments
+   ============================================ */
+@media (max-width: 1024px) {
+    .ipplan-sidebar {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    .ipplan-main {
+        margin-left: 200px;
+    }
+
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .ipplan-sidebar {
+        position: fixed;
+        left: -240px;
+        transition: left 0.3s ease;
+    }
+
+    .ipplan-sidebar.open {
+        left: 0;
+    }
+
+    .ipplan-main {
+        margin-left: 0;
+    }
+
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   PHPLayersMenu overrides (hide in 2026 themes)
+   ============================================ */
+.phplm_HM {
+    display: none !important;
+}
+
+/* ============================================
+   Email popup styling
+   ============================================ */
+.email {
+    position: fixed;
+    top: 15%;
+    right: 24px;
+    width: 280px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+/* ============================================
+   Tree Menu Dark Mode Overrides
+   (PHPLayersMenu tree component)
+   ============================================ */
+.treemenudiv {
+    color: var(--text-primary);
+}
+
+.phplmnormal,
+a.phplmnormal {
+    color: var(--text-secondary) !important;
+    background-color: transparent !important;
+}
+
+a.phplmnormal:hover {
+    color: var(--accent-primary) !important;
+    background-color: var(--bg-card-alt) !important;
+}
+
+a.phplm:link,
+a.phplm:visited {
+    color: var(--accent-light) !important;
+    background-color: transparent !important;
+}
+
+a.phplm:hover {
+    color: var(--accent-primary) !important;
+    background-color: var(--bg-card-alt) !important;
+}
+
+a.phplm:active {
+    color: var(--accent-primary) !important;
+}
+
+a.phplmselected:link,
+a.phplmselected:visited {
+    color: var(--accent-primary) !important;
+    background-color: var(--accent-bg) !important;
+}
+
+a.phplmselected:hover {
+    color: var(--text-primary) !important;
+    background-color: var(--accent-primary) !important;
+}
+
+a.phplmselected:active {
+    color: var(--accent-primary) !important;
+}
+
+/* Tree menu container styling */
+.usermanager {
+    color: var(--text-primary);
+}
+
+.usermanager a {
+    color: var(--accent-light);
+}
+
+.usermanager a:hover {
+    color: var(--accent-primary);
+}
